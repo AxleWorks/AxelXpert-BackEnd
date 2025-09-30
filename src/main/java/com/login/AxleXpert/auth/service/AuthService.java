@@ -1,12 +1,11 @@
 package com.login.AxleXpert.auth.service;
 
-import com.login.AxleXpert.auth.model.User;
-import com.login.AxleXpert.auth.repository.UserRepository;
+import com.login.AxleXpert.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
+import com.login.AxleXpert.model.User;
 @Service
-public class UserService {
+public class AuthService {
 
     @Autowired
     private UserRepository userRepository;

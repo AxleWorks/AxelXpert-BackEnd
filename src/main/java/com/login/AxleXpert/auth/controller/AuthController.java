@@ -1,16 +1,16 @@
 package com.login.AxleXpert.auth.controller;
 
-import com.login.AxleXpert.auth.service.UserService;
+import com.login.AxleXpert.auth.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
-public class UserController {
+public class AuthController {
 
     @Autowired
-    private UserService userService;
+    private AuthService userService;
 
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestParam String username, @RequestParam String password) {
