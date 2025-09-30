@@ -1,6 +1,6 @@
-package com.login.AxleXpert.repository;
+package com.login.AxleXpert.auth.repository;
 
-import com.login.AxleXpert.model.User;
+import com.login.AxleXpert.auth.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

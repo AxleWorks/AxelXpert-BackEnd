@@ -1,9 +1,10 @@
 package com.login.AxleXpert.auth.service;
 
-import com.login.AxleXpert.repository.UserRepository;
+import com.login.AxleXpert.auth.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.login.AxleXpert.model.User;
+import com.login.AxleXpert.auth.model.User;
+
 @Service
 public class AuthService {
 
@@ -17,6 +18,7 @@ public class AuthService {
         User user = new User();
         user.setUsername(username);
         user.setPassword(password);
+
         return userRepository.save(user);
     }
 

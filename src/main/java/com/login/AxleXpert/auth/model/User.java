@@ -1,4 +1,4 @@
-package com.login.AxleXpert.model;
+package com.login.AxleXpert.auth.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
