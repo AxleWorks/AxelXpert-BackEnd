@@ -1,9 +1,8 @@
-package com.login.AxleXpert.auth.service;
+package com.login.AxleXpert.auth;
 
-import com.login.AxleXpert.auth.repository.UserRepository;
+import com.login.AxleXpert.checkstatus.CheckService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.login.AxleXpert.auth.model.User;
 
 @Service
 public class AuthService {
@@ -11,11 +10,11 @@ public class AuthService {
     @Autowired
     private UserRepository userRepository;
 
-    public User registerUser(String username, String password) {
+    public CheckService.User registerUser(String username, String password) {
         if (userRepository.findByUsername(username).isPresent()) {
             throw new RuntimeException("Username already taken");
         }
-        User user = new User();
+        CheckService.User user = new CheckService.User();
         user.setUsername(username);
         user.setPassword(password);
 

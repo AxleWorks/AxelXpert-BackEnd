@@ -1,6 +1,5 @@
-package com.login.AxleXpert.auth.controller;
+package com.login.AxleXpert.auth;
 
-import com.login.AxleXpert.auth.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
