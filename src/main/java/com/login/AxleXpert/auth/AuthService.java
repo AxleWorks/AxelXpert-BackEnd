@@ -7,12 +7,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import com.login.AxleXpert.Users.User;
 import com.login.AxleXpert.Users.UserRepository;
+
+import jakarta.mail.internet.MimeMessage;
 
 @Service
 public class AuthService {
@@ -39,10 +43,12 @@ public class AuthService {
         return token;
     }
 
-    // Register user and return activation link (should be emailed in production)
     public String registerUser(String username, String password, String email) {
         if (userRepository.findByUsername(username).isPresent()) {
             throw new RuntimeException("Username already taken");
+        }
+        if (email != null && userRepository.findByEmail(email).isPresent()) {
+            throw new RuntimeException("Email already registered");
         }
 
         User user = new User();
@@ -55,25 +61,67 @@ public class AuthService {
         String token = generateToken32();
         user.setToken(token);
 
-        userRepository.save(user);
+        try {
+            userRepository.save(user);
+        } catch (DataIntegrityViolationException dive) {
+            // Translate DB constraint failures into a clear exception
+            log.warn("Data integrity violation when saving user {}: {}", username, dive.getMessage());
+            // If email is duplicate, give a friendly message; otherwise rethrow
+            if (email != null && userRepository.findByEmail(email).isPresent()) {
+                throw new RuntimeException("Email already registered");
+            }
+            if (userRepository.findByUsername(username).isPresent()) {
+                throw new RuntimeException("Username already taken");
+            }
+            throw dive;
+        }
 
-    // Build activation link; if activationBaseUrl is configured, produce absolute URL
     String path = String.format("http://localhost:8080/api/auth/activate?token=%s", token);
     String activationLink = (activationBaseUrl != null && !activationBaseUrl.isBlank())
         ? activationBaseUrl.replaceAll("/+$", "") + path
         : path;
-
-        // Try to send activation email if mailSender is configured
+        // Send a styled HTML activation email with a plain-text fallback
         if (mailSender != null && email != null && !email.isBlank()) {
             try {
-                SimpleMailMessage msg = new SimpleMailMessage();
-                msg.setTo(email);
-                msg.setSubject("Activate your AxleXpert account");
-                msg.setText("Hello " + username + ",\n\nPlease activate your account by clicking the link below:\n" + activationLink + "\n\nIf you didn't request this, ignore this email.");
-                mailSender.send(msg);
+                MimeMessage mimeMessage = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
+
+                String html = "<!doctype html>" +
+                        "<html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">" +
+                        "<style>body{font-family: -apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,\"Helvetica Neue\",Arial,sans-serif;background:#f4f7fb;margin:0;padding:0;}" +
+                        ".container{max-width:600px;margin:48px auto;background:#ffffff;border-radius:12px;box-shadow:0 6px 18px rgba(20,30,50,0.08);overflow:hidden;}" +
+                        ".header{padding:28px 32px;background:linear-gradient(90deg,#0ea5b7,#2563eb);color:#fff;}" +
+                        ".content{padding:32px;color:#0f172a;}" +
+                        ".btn{display:inline-block;padding:14px 22px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;margin-top:18px;}" +
+                        ".muted{color:#64748b;font-size:13px;margin-top:18px;}" +
+                        "a.fallback{word-break:break-all;color:#2563eb;}" +
+                        "</style></head><body>" +
+                        "<div class=\"container\">" +
+                        "<div class=\"header\"><h2 style=\"margin:0;font-size:20px\">Activate your AxleXpert account</h2></div>" +
+                        "<div class=\"content\">" +
+                        "<p style=\"font-size:15px;margin:0 0 12px 0\">Hello " + username + ",</p>" +
+                        "<p style=\"margin:0 0 18px 0\">Click the button below to activate your account. The link will expire according to system policy.</p>" +
+                        "<a class=\"btn\" href=\"" + activationLink + "\" style=\"color: #fff; text-decoration: none;\">Activate Account</a>" +
+                        "<p class=\"muted\">If the button doesn't work, copy and paste the following link into your browser:</p>" +
+                        "<p><a class=\"fallback\" href=\"" + activationLink + "\">" + activationLink + "</a></p>" +
+                        "<p class=\"muted\">If you didn't request this, you can safely ignore this email.</p>" +
+                        "</div></div></body></html>";
+
+                helper.setTo(email);
+                helper.setSubject("Activate your AxleXpert account");
+                helper.setText(html, true);
+                mailSender.send(mimeMessage);
             } catch (Exception e) {
-                // Log sending failure and continue returning the link so caller can display it for testing
-                log.warn("Failed to send activation email to {}: {}", email, e.getMessage());
+                log.warn("Failed to send HTML activation email to {}: {}", email, e.getMessage());
+                try {
+                    SimpleMailMessage msg = new SimpleMailMessage();
+                    msg.setTo(email);
+                    msg.setSubject("Activate your AxleXpert account");
+                    msg.setText("Hello " + username + ",\n\nPlease activate your account by clicking the link below:\n" + activationLink + "\n\nIf you didn't request this, ignore this email.");
+                    mailSender.send(msg);
+                } catch (Exception ex) {
+                    log.warn("Failed to send fallback activation email to {}: {}", email, ex.getMessage());
+                }
             }
         }
 

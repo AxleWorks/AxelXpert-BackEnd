@@ -23,7 +23,11 @@ public class AuthController {
             // In production you would send the activationLink to the user's email. For now return it so frontend/test can use it.
             return ResponseEntity.ok("User created. Activation link: " + activationLink);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            String msg = e.getMessage();
+            if (msg != null && (msg.contains("Email already registered") || msg.contains("Username already taken"))) {
+                return ResponseEntity.status(409).body(msg);
+            }
+            return ResponseEntity.badRequest().body(msg);
         }
     }
 

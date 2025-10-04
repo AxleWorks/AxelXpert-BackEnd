@@ -21,16 +21,14 @@ import lombok.NoArgsConstructor;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // numeric id (kept for compatibility with the mock)
+    private Long id;
 
     @Column(unique = true, nullable = false)
     private String username;
 
-    // Store the hashed password here. Keep the column name 'password' to avoid breaking existing code.
     @Column(nullable = false)
     private String password;
 
-    // Role: "user", "employee", "manager"
     @Column(nullable = false)
     private String role;
 
@@ -39,11 +37,9 @@ public class User {
 
     private Boolean is_Blocked = false;
 
-    // Availability active (true = available)
     @Column(nullable = false)
     private Boolean is_Active = false;
 
-    // 32 character token (e.g. API or session token). Keep length 64 to be safe for future encodings.
     @Column(length = 64, unique = true)
     private String token;
 
