@@ -57,7 +57,7 @@ public class AuthService {
         user.setEmail(email);
         user.setIs_Active(false);
         user.setIs_Blocked(false);
-        user.setRole("USER");
+        user.setRole("CUSTOMER");
         String token = generateToken32();
         user.setToken(token);
 
@@ -126,6 +126,30 @@ public class AuthService {
         }
 
         return activationLink;
+    }
+
+    /**
+     * Send a simple test email to verify SMTP connectivity. Returns a success message or
+     * throws RuntimeException with the failure reason.
+     */
+    public String sendTestEmail(String to) {
+        if (mailSender == null) {
+            throw new RuntimeException("Mail sender not configured (JavaMailSender bean not available)");
+        }
+        if (to == null || to.isBlank()) {
+            throw new RuntimeException("Recipient email is empty");
+        }
+        try {
+            SimpleMailMessage msg = new SimpleMailMessage();
+            msg.setTo(to);
+            msg.setSubject("AxleXpert SMTP test");
+            msg.setText("This is a test message from AxleXpert. If you receive this, SMTP is working.");
+            mailSender.send(msg);
+            return "Test email sent to " + to;
+        } catch (Exception e) {
+            log.warn("Failed to send test email to {}: {}", to, e.getMessage());
+            throw new RuntimeException("Failed to send test email: " + e.getMessage());
+        }
     }
 
     // Activate by token

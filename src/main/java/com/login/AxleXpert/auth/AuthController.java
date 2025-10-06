@@ -66,4 +66,16 @@ public class AuthController {
         return ResponseEntity.ok("Authentication service is running");
     }
 
+    // Simple endpoint to test SMTP connectivity from the running app. Call with ?to=you@example.com
+    @GetMapping("/test-email")
+    public ResponseEntity<?> testEmail(@RequestParam(required = false) String to) {
+        String email = (to == null || to.isBlank()) ? "test@example.com" : to;
+        try {
+            String res = userService.sendTestEmail(email);
+            return ResponseEntity.ok(res);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
 }
