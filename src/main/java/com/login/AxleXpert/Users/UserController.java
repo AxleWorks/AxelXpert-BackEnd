@@ -1,7 +1,6 @@
 package com.login.AxleXpert.Users;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,28 +20,21 @@ public class UserController {
     // Get all users with role employee
     @GetMapping("/employees")
     public ResponseEntity<List<User>> getEmployees() {
-        List<User> employees = userRepository.findAll().stream()
-                .filter(u -> u.getRole() != null && u.getRole().equalsIgnoreCase("employee"))
-                .collect(Collectors.toList());
+        List<User> employees = userRepository.findByRoleIgnoreCase("employee");
         return ResponseEntity.ok(employees);
     }
 
     // Get all users with role manager
     @GetMapping("/managers")
     public ResponseEntity<List<User>> getManagers() {
-        List<User> managers = userRepository.findAll().stream()
-                .filter(u -> u.getRole() != null && u.getRole().equalsIgnoreCase("manager"))
-                .collect(Collectors.toList());
+        List<User> managers = userRepository.findByRoleIgnoreCase("manager");
         return ResponseEntity.ok(managers);
     }
 
     // Get employees by branch id
     @GetMapping("/branch/{branchId}/employees")
     public ResponseEntity<List<User>> getEmployeesByBranch(@PathVariable Long branchId) {
-        List<User> employees = userRepository.findAll().stream()
-                .filter(u -> u.getRole() != null && u.getRole().equalsIgnoreCase("employee")
-                        && u.getBranchId() != null && u.getBranchId().equals(branchId))
-                .collect(Collectors.toList());
+        List<User> employees = userRepository.findByRoleIgnoreCaseAndBranch_Id(branchId);
         return ResponseEntity.ok(employees);
     }
 }

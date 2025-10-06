@@ -1,8 +1,9 @@
-package com.login.AxleXpert.Users;
+package com.login.AxleXpert.Vehicals;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+
+import com.login.AxleXpert.Users.User;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -13,58 +14,51 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
+@Table(name = "vehicles")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-
-public class User {
+public class Vehicle {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
-    private String username;
-
+    // e.g., Car
     @Column(nullable = false)
-    private String password;
+    private String type;
 
-    @Column(nullable = false)
-    private String role;
+    // e.g., 2020
+    private Integer year;
 
-    @Column(unique = true)
-    private String email;
+    private String make; // e.g., Honda
 
-    private Boolean is_Blocked = false;
+    private String model; // e.g., Civic
 
-    @Column(nullable = false)
-    private Boolean is_Active = false;
+    private String fuelType; // petrol or diesel
 
-    @Column(length = 64, unique = true)
-    private String token;
+    @Column(name = "plate_number")
+    private String plateNumber;
 
-    private String address;
+    @Column(name = "chassis_number")
+    private String chassisNumber;
 
-    private String phoneNumber;
-
-    @ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)
-    @JoinColumn(name = "branch_id")
-    private com.login.AxleXpert.Branches.Branch branch;
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<com.login.AxleXpert.Vehicals.Vehicle> vehicles = new ArrayList<>();
+    private LocalDate lastServiceDate;
 
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE})
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @PrePersist
     protected void onCreate() {
@@ -76,5 +70,4 @@ public class User {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
 }
