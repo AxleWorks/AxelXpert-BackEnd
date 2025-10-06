@@ -17,7 +17,8 @@ public class BranchController {
     public BranchController(BranchRepository branchRepository) {
         this.branchRepository = branchRepository;
     }
-    @GetMapping
+
+    @GetMapping("")
     public ResponseEntity<List<BranchDTO>> list() {
         List<BranchDTO> list = branchRepository.findAll().stream()
                 .map(BranchDTO::new)

@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
@@ -12,5 +14,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // Convenience query methods used by UserController
     List<User> findByRoleIgnoreCase(String role);
-    List<User> findByRoleIgnoreCaseAndBranch_Id(Long branchId);
+    List<User> findByRoleIgnoreCaseAndBranch_Id(String role, Long branchId);
+
+    // Fetch branch to avoid LazyInitializationException when converting to DTOs
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.branch b WHERE LOWER(u.role) = LOWER(:role)")
+    List<User> findByRoleIgnoreCaseWithBranch(@Param("role") String role);
+
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.branch b WHERE LOWER(u.role) = LOWER(:role) AND b.id = :branchId")
+    List<User> findByRoleIgnoreCaseAndBranch_IdWithBranch(@Param("role") String role, @Param("branchId") Long branchId);
 }
