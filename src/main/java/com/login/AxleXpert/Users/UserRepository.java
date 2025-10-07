@@ -22,4 +22,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.branch b WHERE LOWER(u.role) = LOWER(:role) AND b.id = :branchId")
     List<User> findByRoleIgnoreCaseAndBranch_IdWithBranch(@Param("role") String role, @Param("branchId") Long branchId);
+
+    // Fetch a single user along with its branch to avoid LazyInitializationException
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.branch b WHERE u.id = :id")
+    Optional<User> findByIdWithBranch(@Param("id") Long id);
 }
