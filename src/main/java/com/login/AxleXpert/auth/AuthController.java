@@ -23,7 +23,11 @@ public class AuthController {
             // In production you would send the activationLink to the user's email. For now return it so frontend/test can use it.
             return ResponseEntity.ok("User created. Activation link: " + activationLink);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            String msg = e.getMessage();
+            if (msg != null && (msg.contains("Email already registered") || msg.contains("Username already taken"))) {
+                return ResponseEntity.status(409).body(msg);
+            }
+            return ResponseEntity.badRequest().body(msg);
         }
     }
 
@@ -60,6 +64,18 @@ public class AuthController {
     @GetMapping("/status")
     public ResponseEntity<?> status() {
         return ResponseEntity.ok("Authentication service is running");
+    }
+
+    // Simple endpoint to test SMTP connectivity from the running app. Call with ?to=you@example.com
+    @GetMapping("/test-email")
+    public ResponseEntity<?> testEmail(@RequestParam(required = false) String to) {
+        String email = (to == null || to.isBlank()) ? "test@example.com" : to;
+        try {
+            String res = userService.sendTestEmail(email);
+            return ResponseEntity.ok(res);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
     }
 
 }
