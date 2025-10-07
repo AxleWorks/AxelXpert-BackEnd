@@ -57,7 +57,7 @@ public class AuthService {
         user.setEmail(email);
         user.setIs_Active(false);
         user.setIs_Blocked(false);
-        user.setRole("CUSTOMER");
+        user.setRole("user");
         String token = generateToken32();
         user.setToken(token);
 
