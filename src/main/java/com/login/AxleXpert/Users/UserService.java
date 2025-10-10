@@ -35,6 +35,8 @@ public class UserService {
                 user.getIs_Active(),
                 user.getAddress(),
                 user.getPhoneNumber(),
+                user.getProfileImageUrl(),
+                user.getCloudinaryPublicId(),
                 branchId,
                 branchName,
                 user.getCreatedAt(),
@@ -115,5 +117,29 @@ public class UserService {
             userRepository.save(user);
             return true;
         }).orElse(false);
+    }
+
+    @Transactional
+    public Optional<UserDTO> updateProfileImage(Long id, ProfileImageUpdateDTO dto) {
+        if (dto == null || dto.getProfileImageUrl() == null || dto.getCloudinaryPublicId() == null) {
+            return Optional.empty();
+        }
+        
+        return userRepository.findById(id).map(user -> {
+            user.setProfileImageUrl(dto.getProfileImageUrl());
+            user.setCloudinaryPublicId(dto.getCloudinaryPublicId());
+            User saved = userRepository.save(user);
+            return toDto(saved);
+        });
+    }
+
+    @Transactional
+    public Optional<UserDTO> deleteProfileImage(Long id) {
+        return userRepository.findById(id).map(user -> {
+            user.setProfileImageUrl(null);
+            user.setCloudinaryPublicId(null);
+            User saved = userRepository.save(user);
+            return toDto(saved);
+        });
     }
 }

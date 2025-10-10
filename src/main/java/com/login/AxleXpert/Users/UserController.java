@@ -3,6 +3,7 @@ package com.login.AxleXpert.Users;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -67,6 +68,22 @@ public class UserController {
     @GetMapping("/branch/{branchId}/employees")
     public ResponseEntity<List<UserDTO>> getEmployeesByBranch(@PathVariable Long branchId) {
         return ResponseEntity.ok(userService.getEmployeesByBranch(branchId));
+    }
+
+    // Update profile image
+    @PutMapping("/{id}/profile-image")
+    public ResponseEntity<UserDTO> updateProfileImage(@PathVariable Long id, @RequestBody ProfileImageUpdateDTO dto) {
+        return userService.updateProfileImage(id, dto)
+            .map(ResponseEntity::ok)
+            .orElseGet(() -> ResponseEntity.badRequest().build());
+    }
+
+    // Delete profile image
+    @DeleteMapping("/{id}/profile-image")
+    public ResponseEntity<UserDTO> deleteProfileImage(@PathVariable Long id) {
+        return userService.deleteProfileImage(id)
+            .map(ResponseEntity::ok)
+            .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
 }

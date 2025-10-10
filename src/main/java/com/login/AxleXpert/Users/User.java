@@ -54,6 +54,12 @@ public class User {
 
     private String phoneNumber;
 
+    @Column(length = 500)
+    private String profileImageUrl;
+
+    @Column(length = 300)
+    private String cloudinaryPublicId;
+
     @ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)
     @JoinColumn(name = "branch_id")
     private com.login.AxleXpert.Branches.Branch branch;
