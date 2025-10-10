@@ -18,6 +18,8 @@ public class UserDTO {
     private Boolean isActive;
     private String address;
     private String phoneNumber;
+    private String profileImageUrl;
+    private String cloudinaryPublicId;
     private Long branchId;
     private String branchName;
     private LocalDateTime createdAt;
