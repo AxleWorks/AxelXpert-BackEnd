@@ -4,8 +4,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.login.AxleXpert.BookingCalender.UserBookings.Booking;
 import com.login.AxleXpert.Users.User;
+import com.login.AxleXpert.bookings.Booking;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

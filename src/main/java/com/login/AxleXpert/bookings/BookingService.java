@@ -1,111 +1,136 @@
-package com.login.AxleXpert.BookingCalender.UserBookings;
+package com.login.AxleXpert.bookings;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.login.AxleXpert.Tasks.service.TaskService;
 import com.login.AxleXpert.Users.User;
 import com.login.AxleXpert.Users.UserRepository;
+import com.login.AxleXpert.bookings.dto.BookingDTO;
+import com.login.AxleXpert.common.enums.BookingStatus;
 
-@RestController
-@RequestMapping("/api/bookings")
-public class BookingController {
+@Service
+@Transactional
+public class BookingService {
 
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
+    private final TaskService taskService;
 
-    @Autowired
-    public BookingController(BookingRepository bookingRepository, UserRepository userRepository) {
+    public BookingService(BookingRepository bookingRepository, UserRepository userRepository, TaskService taskService) {
         this.bookingRepository = bookingRepository;
         this.userRepository = userRepository;
+        this.taskService = taskService;
     }
 
-    @GetMapping("/all")
-    public ResponseEntity<List<BookingDTO>> getAll(@RequestParam(required = false) Integer count) {
-        List<BookingDTO> dtos = bookingRepository.findAll()
+    @Transactional(readOnly = true)
+    public List<BookingDTO> getAllBookings() {
+        return bookingRepository.findAll()
                 .stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
-
-        if (count != null && count > 0) {
-            int n = Math.max(0, Math.min(dtos.size(), count));
-            return ResponseEntity.ok(dtos.subList(0, n));
-        }
-        return ResponseEntity.ok(dtos);
     }
 
-    @PostMapping("/{bookingId}/assign")
-    public ResponseEntity<?> assignEmployee(@PathVariable Long bookingId, @RequestBody AssignEmployeeDTO assignEmployeeDTO) {
+    @Transactional(readOnly = true)
+    public List<BookingDTO> getAllBookings(Integer count) {
+        List<BookingDTO> dtos = getAllBookings();
+        
+        if (count != null && count > 0) {
+            int n = Math.max(0, Math.min(dtos.size(), count));
+            return dtos.subList(0, n);
+        }
+        return dtos;
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<BookingDTO> getBookingById(Long id) {
+        return bookingRepository.findById(id)
+                .map(this::toDto);
+    }
+
+    public Optional<BookingDTO> assignEmployee(Long bookingId, Long employeeId) {
         Optional<Booking> bookingOpt = bookingRepository.findById(bookingId);
         if (bookingOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ErrorResponse("Booking not found with id: " + bookingId));
+            return Optional.empty();
         }
 
-        Optional<User> employeeOpt = userRepository.findById(assignEmployeeDTO.employeeId());
+        Booking booking = bookingOpt.get();
+        
+        // Check if booking can be approved
+        if (booking.getStatus() == BookingStatus.CANCELLED) {
+            throw new IllegalStateException("Cannot approve a booking that has been rejected/cancelled");
+        }
+        
+        if (booking.getStatus() == BookingStatus.APPROVED) {
+            throw new IllegalStateException("Booking is already approved");
+        }
+
+        Optional<User> employeeOpt = userRepository.findById(employeeId);
         if (employeeOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ErrorResponse("Employee not found with id: " + assignEmployeeDTO.employeeId()));
+            throw new IllegalArgumentException("Employee not found with id: " + employeeId);
         }
 
         User employee = employeeOpt.get();
         if (!"EMPLOYEE".equalsIgnoreCase(employee.getRole())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ErrorResponse("User with id " + assignEmployeeDTO.employeeId() + " is not an employee"));
+            throw new IllegalArgumentException("User with id " + employeeId + " is not an employee");
         }
 
-        Booking booking = bookingOpt.get();
         booking.setAssignedEmployee(employee);
         booking.setStatus(BookingStatus.APPROVED);
         
         Booking savedBooking = bookingRepository.save(booking);
-        return ResponseEntity.ok(toDto(savedBooking));
+        
+        // Create a task for the assigned employee
+        taskService.createTaskForBooking(bookingId, employeeId);
+        
+        return Optional.of(toDto(savedBooking));
     }
 
-    @PostMapping("/{bookingId}/reject")
-    public ResponseEntity<?> rejectBooking(@PathVariable Long bookingId, @RequestBody RejectBookingDTO rejectBookingDTO) {
+    public Optional<BookingDTO> rejectBooking(Long bookingId, String reason, String notes) {
         Optional<Booking> bookingOpt = bookingRepository.findById(bookingId);
         if (bookingOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ErrorResponse("Booking not found with id: " + bookingId));
+            return Optional.empty();
         }
 
         Booking booking = bookingOpt.get();
+        
+        // Check if booking can be rejected
+        if (booking.getStatus() == BookingStatus.APPROVED) {
+            throw new IllegalStateException("Cannot reject a booking that has been approved");
+        }
+        
+        if (booking.getStatus() == BookingStatus.CANCELLED) {
+            throw new IllegalStateException("Booking is already rejected/cancelled");
+        }
+        
         booking.setStatus(BookingStatus.CANCELLED);
         
-        // Update notes with rejection reason if provided
+        // Update notes with rejection reason
         String existingNotes = booking.getNotes() != null ? booking.getNotes() : "";
         StringBuilder updatedNotes = new StringBuilder(existingNotes);
         
-        if (rejectBookingDTO.reason() != null && !rejectBookingDTO.reason().trim().isEmpty()) {
+        if (reason != null && !reason.trim().isEmpty()) {
             if (!existingNotes.isEmpty()) {
                 updatedNotes.append("\n");
             }
-            updatedNotes.append("Rejection reason: ").append(rejectBookingDTO.reason());
+            updatedNotes.append("Rejection reason: ").append(reason);
         }
         
-        if (rejectBookingDTO.notes() != null && !rejectBookingDTO.notes().trim().isEmpty()) {
+        if (notes != null && !notes.trim().isEmpty()) {
             if (updatedNotes.length() > 0) {
                 updatedNotes.append("\n");
             }
-            updatedNotes.append("Additional notes: ").append(rejectBookingDTO.notes());
+            updatedNotes.append("Additional notes: ").append(notes);
         }
         
         booking.setNotes(updatedNotes.toString());
         
         Booking savedBooking = bookingRepository.save(booking);
-        return ResponseEntity.ok(toDto(savedBooking));
+        return Optional.of(toDto(savedBooking));
     }
 
     private BookingDTO toDto(Booking b) {
