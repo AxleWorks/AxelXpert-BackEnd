@@ -20,7 +20,7 @@ public class AuthController {
     public ResponseEntity<?> signup(@RequestBody SignupDTO dto) {
         try {
             String activationLink = userService.registerUser(dto.getUsername(), dto.getPassword(), dto.getEmail());
-            // In production you would send the activationLink to the user's email. For now return it so frontend/test can use it.
+            // In production, you would send the activationLink to the user's email. For now return it so frontend/test can use it.
             return ResponseEntity.ok("User created. Activation link: " + activationLink);
         } catch (RuntimeException e) {
             String msg = e.getMessage();
