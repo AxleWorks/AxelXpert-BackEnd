@@ -28,7 +28,7 @@ public class UserController {
         return ResponseEntity.ok(userService.getUsers());
     }
 
-    // Get all users with role manager
+    // Get all users with a role manager
     @GetMapping("/managers")
     public ResponseEntity<List<UserDTO>> getManagers() {
         return ResponseEntity.ok(userService.getManagers());
