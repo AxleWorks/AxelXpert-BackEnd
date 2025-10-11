@@ -1,4 +1,4 @@
-package com.login.AxleXpert.BookingCalender.UserBookings;
+package com.login.AxleXpert.bookings.dto;
 
 /**
  * DTO for rejecting a booking
