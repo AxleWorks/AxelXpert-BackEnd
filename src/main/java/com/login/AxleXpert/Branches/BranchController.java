@@ -1,7 +1,6 @@
 package com.login.AxleXpert.Branches;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,24 +11,21 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/branches")
 public class BranchController {
-    private final BranchRepository branchRepository;
+    private final BranchService branchService;
 
-    public BranchController(BranchRepository branchRepository) {
-        this.branchRepository = branchRepository;
+    public BranchController(BranchService branchService) {
+        this.branchService = branchService;
     }
 
-    @GetMapping("")
+    @GetMapping("/all")
     public ResponseEntity<List<BranchDTO>> list() {
-        List<BranchDTO> list = branchRepository.findAll().stream()
-                .map(BranchDTO::new)
-                .collect(Collectors.toList());
+        List<BranchDTO> list = branchService.getAllBranches();
         return ResponseEntity.ok(list);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<BranchDTO> getById(@PathVariable Long id) {
-        return branchRepository.findById(id)
-                .map(BranchDTO::new)
+        return branchService.getBranchById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }

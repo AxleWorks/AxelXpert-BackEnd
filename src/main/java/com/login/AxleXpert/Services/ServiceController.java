@@ -20,7 +20,7 @@ public class ServiceController {
         this.repository = repository;
     }
 
-    @GetMapping
+    @GetMapping ("")
     public ResponseEntity<List<ServiceDTO>> getAll() {
         List<ServiceDTO> dtos = repository.findAll()
                 .stream()
