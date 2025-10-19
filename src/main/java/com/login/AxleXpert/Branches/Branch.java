@@ -40,6 +40,14 @@ public class Branch {
 
     private String phone;
 
+    private String email;
+
+    private String mapLink;
+
+    private String openHours;
+
+    private String closeHours;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
