@@ -142,4 +142,8 @@ public class UserService {
             return toDto(saved);
         });
     }
+
+    public List<UserDTO> getAllUsers() {
+        return userRepository.findAll().stream().map(this::toDto).toList();
+    }
 }
