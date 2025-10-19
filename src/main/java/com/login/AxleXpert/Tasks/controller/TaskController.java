@@ -1,5 +1,6 @@
 package com.login.AxleXpert.Tasks.controller;
 
+import java.lang.management.ManagementFactory;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,6 +35,8 @@ public class TaskController {
 
     private final TaskService taskService;
 
+    private ManagementFactory managementFactory;
+
     public TaskController(TaskService taskService) {
         this.taskService = taskService;
     }
@@ -42,6 +45,7 @@ public class TaskController {
     public ResponseEntity<List<TaskDTO>> getTasksByEmployee(@PathVariable Long employeeId) {
         List<TaskDTO> tasks = taskService.getTasksByEmployee(employeeId);
         return ResponseEntity.ok(tasks);
+
     }
 
     @GetMapping("/customer/{customerId}")
@@ -170,3 +174,4 @@ public class TaskController {
         }
     }
 }
+

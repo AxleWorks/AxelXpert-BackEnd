@@ -36,6 +36,10 @@ public class BranchService {
         branch.setName(branchDTO.getName());
         branch.setAddress(branchDTO.getAddress());
         branch.setPhone(branchDTO.getPhone());
+        branch.setEmail(branchDTO.getEmail());
+        branch.setMapLink(branchDTO.getMapLink());
+        branch.setOpenHours(branchDTO.getOpenHours());
+        branch.setCloseHours(branchDTO.getCloseHours());
         
         Branch savedBranch = branchRepository.save(branch);
         return new BranchDTO(savedBranch);
@@ -47,6 +51,10 @@ public class BranchService {
                     branch.setName(branchDTO.getName());
                     branch.setAddress(branchDTO.getAddress());
                     branch.setPhone(branchDTO.getPhone());
+                    branch.setEmail(branchDTO.getEmail());
+                    branch.setMapLink(branchDTO.getMapLink());
+                    branch.setOpenHours(branchDTO.getOpenHours());
+                    branch.setCloseHours(branchDTO.getCloseHours());
                     
                     Branch updatedBranch = branchRepository.save(branch);
                     return new BranchDTO(updatedBranch);
