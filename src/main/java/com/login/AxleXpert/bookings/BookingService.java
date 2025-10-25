@@ -146,9 +146,7 @@ public class BookingService {
             throw new IllegalArgumentException("Booking data is required");
         }
 
-        if (dto.startAt() == null || dto.startAt().isBlank()) {
-            throw new IllegalArgumentException("startAt (date/time) is required");
-        }
+        // startAt is optional for customer requests. If not provided, default to now().
 
         if (dto.branchId() == null) {
             throw new IllegalArgumentException("branchId is required");
@@ -162,7 +160,12 @@ public class BookingService {
             throw new IllegalArgumentException("customerId is required");
         }
 
-    java.time.LocalDateTime startAt = parseDateTime(dto.startAt());
+    java.time.LocalDateTime startAt;
+    if (dto.startAt() == null || dto.startAt().isBlank()) {
+        startAt = java.time.LocalDateTime.now();
+    } else {
+        startAt = parseDateTime(dto.startAt());
+    }
 
         // Check duplicate booking at same branch and start time
         if (bookingRepository.existsByBranch_IdAndStartAt(dto.branchId(), startAt)) {
