@@ -183,4 +183,22 @@ public class BookingController {
                     .body(new ErrorResponse("Failed to create booking: " + e.getMessage()));
         }
     }
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteBooking(@org.springframework.web.bind.annotation.PathVariable Long id) {
+        try {
+            boolean deleted = bookingService.deleteBooking(id);
+            if (!deleted) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ErrorResponse("Booking not found with id: " + id));
+            }
+            return ResponseEntity.noContent().build();
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ErrorResponse(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Failed to delete booking: " + e.getMessage()));
+        }
+    }
 }
