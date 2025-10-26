@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.login.AxleXpert.Tasks.dto.CreateSubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.CreateTaskImageDTO;
 import com.login.AxleXpert.Tasks.dto.CreateTaskNoteDTO;
+import com.login.AxleXpert.Tasks.dto.EmployeeTaskDTO;
 import com.login.AxleXpert.Tasks.dto.SubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.TaskDTO;
 import com.login.AxleXpert.Tasks.dto.TaskImageDTO;
@@ -42,8 +43,8 @@ public class TaskController {
     }
 
     @GetMapping("/employee/{employeeId}")
-    public ResponseEntity<List<TaskDTO>> getTasksByEmployee(@PathVariable Long employeeId) {
-        List<TaskDTO> tasks = taskService.getTasksByEmployee(employeeId);
+    public ResponseEntity<List<EmployeeTaskDTO>> getTasksByEmployee(@PathVariable Long employeeId) {
+        List<EmployeeTaskDTO> tasks = taskService.getTasksByEmployee(employeeId);
         return ResponseEntity.ok(tasks);
 
     }
