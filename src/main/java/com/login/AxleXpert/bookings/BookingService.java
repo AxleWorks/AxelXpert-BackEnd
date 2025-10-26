@@ -140,6 +140,18 @@ public class BookingService {
         return Optional.of(toDto(savedBooking));
     }
 
+    /**
+     * Delete a booking by id.
+     * @param bookingId id to delete
+     * @return true if deleted, false if not found
+     */
+    public boolean deleteBooking(Long bookingId) {
+        var bookingOpt = bookingRepository.findById(bookingId);
+        if (bookingOpt.isEmpty()) return false;
+        bookingRepository.delete(bookingOpt.get());
+        return true;
+    }
+
     public BookingDTO createBooking(BookingDTO dto) {
         // Basic validation
         if (dto == null) {
