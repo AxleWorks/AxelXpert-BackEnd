@@ -117,7 +117,7 @@ public class TaskController {
         }
     }
 
-    @PutMapping("/subtasks/{subTaskId}")
+    @PatchMapping("/subtasks/{subTaskId}")
     public ResponseEntity<?> updateSubTask(@PathVariable Long subTaskId, 
                                          @RequestBody UpdateSubTaskDTO updateSubTaskDTO) {
         try {
