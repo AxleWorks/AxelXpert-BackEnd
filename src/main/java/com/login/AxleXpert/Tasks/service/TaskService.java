@@ -19,6 +19,7 @@ import com.login.AxleXpert.Tasks.dto.TaskDTO;
 import com.login.AxleXpert.Tasks.dto.TaskImageDTO;
 import com.login.AxleXpert.Tasks.dto.TaskNoteDTO;
 import com.login.AxleXpert.Tasks.dto.UpdateSubTaskDTO;
+import com.login.AxleXpert.Tasks.dto.UpdateTaskDTO;
 import com.login.AxleXpert.Tasks.entity.SubTask;
 import com.login.AxleXpert.Tasks.entity.Task;
 import com.login.AxleXpert.Tasks.entity.TaskImage;
@@ -116,14 +117,36 @@ public class TaskService {
         return taskRepository.findByBookingId(bookingId).map(this::toTaskDTO);
     }
 
-    public TaskDTO updateTaskStatus(Long taskId, TaskStatus status) {
+    // public TaskDTO updateTaskStatus(Long taskId, TaskStatus status) {
+    //     Optional<Task> taskOpt = taskRepository.findById(taskId);
+    //     if (taskOpt.isEmpty()) {
+    //         throw new IllegalArgumentException("Task not found with id: " + taskId);
+    //     }
+
+    //     Task task = taskOpt.get();
+    //     task.setStatus(status);
+    //     Task savedTask = taskRepository.save(task);
+    //     return toTaskDTO(savedTask);
+    // }
+
+    public TaskDTO updateTask(Long taskId, UpdateTaskDTO updateTaskDTO) {
         Optional<Task> taskOpt = taskRepository.findById(taskId);
         if (taskOpt.isEmpty()) {
             throw new IllegalArgumentException("Task not found with id: " + taskId);
         }
 
         Task task = taskOpt.get();
-        task.setStatus(status);
+        
+        if (updateTaskDTO.status() != null) {
+            task.setStatus(updateTaskDTO.status());
+        }
+        if (updateTaskDTO.startTime() != null) {
+            task.setStartTime(updateTaskDTO.startTime());
+        }
+        if (updateTaskDTO.completedTime() != null) {
+            task.setCompletedTime(updateTaskDTO.completedTime());
+        }
+
         Task savedTask = taskRepository.save(task);
         return toTaskDTO(savedTask);
     }
