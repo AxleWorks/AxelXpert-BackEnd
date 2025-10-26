@@ -240,6 +240,7 @@ public class TaskService {
         taskNote.setAuthor(author);
         taskNote.setNoteType(createTaskNoteDTO.noteType());
         taskNote.setContent(createTaskNoteDTO.content());
+        taskNote.setVisibleToCustomer(createTaskNoteDTO.visibleToCustomer());
 
         TaskNote savedNote = taskNoteRepository.save(taskNote);
         return toTaskNoteDTO(savedNote);
