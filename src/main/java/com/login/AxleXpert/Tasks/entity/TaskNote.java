@@ -48,6 +48,9 @@ public class TaskNote {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
+    @Column(name = "visible_to_customer")
+    private boolean visibleToCustomer;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
