@@ -13,6 +13,7 @@ import com.login.AxleXpert.bookings.Booking;
 import com.login.AxleXpert.bookings.BookingRepository;
 import com.login.AxleXpert.Tasks.dto.CreateSubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.CreateTaskNoteDTO;
+import com.login.AxleXpert.Tasks.dto.EmployeeTaskDTO;
 import com.login.AxleXpert.Tasks.dto.SubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.TaskDTO;
 import com.login.AxleXpert.Tasks.dto.TaskImageDTO;
@@ -94,9 +95,9 @@ public class TaskService {
     }
 
     @Transactional(readOnly = true)
-    public List<TaskDTO> getTasksByEmployee(Long employeeId) {
-        List<Task> tasks = taskRepository.findByAssignedEmployeeId(employeeId);
-        return tasks.stream().map(this::toTaskDTO).collect(Collectors.toList());
+    public List<EmployeeTaskDTO> getTasksByEmployee(Long employeeId) {
+        List<Task> tasks = taskRepository.findByAssignedEmployeeIdWithBooking(employeeId);
+        return tasks.stream().map(this::toEmployeeTaskDTO).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -295,6 +296,25 @@ public class TaskService {
                 subTasks,
                 taskNotes,
                 taskImages,
+                task.getCreatedAt(),
+                task.getUpdatedAt()
+        );
+    }
+
+    private EmployeeTaskDTO toEmployeeTaskDTO(Task task) {
+        return new EmployeeTaskDTO(
+                task.getId(),
+                task.getBooking().getCustomerName(),
+                task.getBooking().getVehicle(),
+                task.getBooking().getService().getDurationMinutes(),
+                task.getTitle(),
+                task.getDescription(),
+                task.getStatus(),
+                task.getSubTasks().stream()
+                        .map(this::toSubTaskDTO)
+                        .collect(Collectors.toList()),
+                task.getStartTime(),
+                task.getCompletedTime(),
                 task.getCreatedAt(),
                 task.getUpdatedAt()
         );
