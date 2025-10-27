@@ -92,4 +92,20 @@ public class UserController {
             .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    // Delete user by id
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        try {
+            boolean deleted = userService.deleteUser(id);
+            if (deleted) {
+                return ResponseEntity.noContent().build();
+            } else {
+                return ResponseEntity.status(409)
+                    .body("Cannot delete user: User has active bookings or tasks");
+            }
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 }
