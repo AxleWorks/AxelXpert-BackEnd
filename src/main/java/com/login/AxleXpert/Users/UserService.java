@@ -8,15 +8,24 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.login.AxleXpert.Branches.BranchRepository;
+import com.login.AxleXpert.Tasks.repository.TaskRepository;
+import com.login.AxleXpert.bookings.BookingRepository;
 
 @Service
 public class UserService {
     private final UserRepository userRepository;
     private final BranchRepository branchRepository;
+    private final BookingRepository bookingRepository;
+    private final TaskRepository taskRepository;
 
-    public UserService(UserRepository userRepository, BranchRepository branchRepository) {
+    public UserService(UserRepository userRepository, 
+                      BranchRepository branchRepository,
+                      BookingRepository bookingRepository,
+                      TaskRepository taskRepository) {
         this.userRepository = userRepository;
         this.branchRepository = branchRepository;
+        this.bookingRepository = bookingRepository;
+        this.taskRepository = taskRepository;
     }
     // Convert entity -> DTO
     private UserDTO toDto(User user) {
@@ -145,5 +154,34 @@ public class UserService {
 
     public List<UserDTO> getAllUsers() {
         return userRepository.findAll().stream().map(this::toDto).toList();
+    }
+
+    /**
+     * Delete a user by ID.
+     * Returns true if deleted successfully.
+     * Returns false if user has bookings or tasks (cannot be deleted).
+     * Throws exception if user not found.
+     */
+    @Transactional
+    public boolean deleteUser(Long id) {
+        // Check if user exists
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        
+        // Check if user has any bookings (as customer or assigned employee)
+        boolean hasBookingsAsCustomer = bookingRepository.existsByCustomerId(id);
+        boolean hasBookingsAsEmployee = bookingRepository.existsByAssignedEmployeeId(id);
+        
+        // Check if user has any assigned tasks
+        boolean hasTasks = taskRepository.existsByAssignedEmployeeId(id);
+        
+        // User cannot be deleted if they have bookings or tasks
+        if (hasBookingsAsCustomer || hasBookingsAsEmployee || hasTasks) {
+            return false;
+        }
+        
+        // Safe to delete
+        userRepository.delete(user);
+        return true;
     }
 }

@@ -5,4 +5,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
+    // Check if user has any bookings (as customer or assigned employee)
+    boolean existsByCustomerId(Long customerId);
+    boolean existsByAssignedEmployeeId(Long employeeId);
 }
