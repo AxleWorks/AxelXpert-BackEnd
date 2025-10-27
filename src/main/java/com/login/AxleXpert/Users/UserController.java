@@ -1,6 +1,7 @@
 package com.login.AxleXpert.Users;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -90,6 +91,26 @@ public class UserController {
         return userService.deleteProfileImage(id)
             .map(ResponseEntity::ok)
             .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    // Block or unblock user by id
+    @PutMapping("/{id}/block")
+    public ResponseEntity<?> updateBlockStatus(@PathVariable Long id, @RequestBody BlockStatusDTO dto) {
+        if (dto == null || dto.getBlocked() == null) {
+            return ResponseEntity.badRequest().body("'blocked' field is required (true or false)");
+        }
+        
+        try {
+            Optional<UserDTO> result = userService.blockUser(id, dto.getBlocked());
+            if (result.isPresent()) {
+                return ResponseEntity.ok(result.get());
+            } else {
+                return ResponseEntity.status(409)
+                    .body("Cannot block user: User has active bookings or tasks");
+            }
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     // Delete user by id

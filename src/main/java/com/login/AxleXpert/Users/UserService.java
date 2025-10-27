@@ -156,12 +156,35 @@ public class UserService {
         return userRepository.findAll().stream().map(this::toDto).toList();
     }
 
-    /**
-     * Delete a user by ID.
-     * Returns true if deleted successfully.
-     * Returns false if user has bookings or tasks (cannot be deleted).
-     * Throws exception if user not found.
-     */
+    //Block or unblock a user by ID.
+    @Transactional
+    public Optional<UserDTO> blockUser(Long id, boolean blocked) {
+        // Check if user exists
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        
+        // If trying to block (not unblock), check for dependencies
+        if (blocked) {
+            // Check if user has any bookings (as customer or assigned employee)
+            boolean hasBookingsAsCustomer = bookingRepository.existsByCustomerId(id);
+            boolean hasBookingsAsEmployee = bookingRepository.existsByAssignedEmployeeId(id);
+            
+            // Check if user has any assigned tasks
+            boolean hasTasks = taskRepository.existsByAssignedEmployeeId(id);
+            
+            // User cannot be blocked if they have bookings or tasks
+            if (hasBookingsAsCustomer || hasBookingsAsEmployee || hasTasks) {
+                return Optional.empty();
+            }
+        }
+        
+        // Safe to update block status
+        user.setIs_Blocked(blocked);
+        User saved = userRepository.save(user);
+        return Optional.of(toDto(saved));
+    }
+
+    //Delete a user by ID.
     @Transactional
     public boolean deleteUser(Long id) {
         // Check if user exists
