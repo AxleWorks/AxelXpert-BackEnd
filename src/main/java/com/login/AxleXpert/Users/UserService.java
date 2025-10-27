@@ -3,13 +3,16 @@ package com.login.AxleXpert.Users;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.login.AxleXpert.Branches.Branch;
 import com.login.AxleXpert.Branches.BranchRepository;
 import com.login.AxleXpert.Tasks.repository.TaskRepository;
 import com.login.AxleXpert.bookings.BookingRepository;
+import com.login.AxleXpert.common.EmailService;
 
 @Service
 public class UserService {
@@ -17,15 +20,18 @@ public class UserService {
     private final BranchRepository branchRepository;
     private final BookingRepository bookingRepository;
     private final TaskRepository taskRepository;
+    private final EmailService emailService;
 
     public UserService(UserRepository userRepository, 
                       BranchRepository branchRepository,
                       BookingRepository bookingRepository,
-                      TaskRepository taskRepository) {
+                      TaskRepository taskRepository,
+                      EmailService emailService) {
         this.userRepository = userRepository;
         this.branchRepository = branchRepository;
         this.bookingRepository = bookingRepository;
         this.taskRepository = taskRepository;
+        this.emailService = emailService;
     }
     // Convert entity -> DTO
     private UserDTO toDto(User user) {
@@ -206,5 +212,76 @@ public class UserService {
         // Safe to delete
         userRepository.delete(user);
         return true;
+    }
+
+    // Add a new employee
+    @Transactional
+    public UserDTO addEmployee(AddEmployeeDTO dto) {
+        // Validate input
+        if (dto.getEmail() == null || dto.getEmail().trim().isEmpty()) {
+            throw new IllegalArgumentException("Email is required");
+        }
+        if (dto.getRole() == null || dto.getRole().trim().isEmpty()) {
+            throw new IllegalArgumentException("Role is required");
+        }
+        if (dto.getBranch() == null || dto.getBranch().trim().isEmpty()) {
+            throw new IllegalArgumentException("Branch is required");
+        }
+
+        // Check if email already exists
+        Optional<User> existingUser = userRepository.findByEmail(dto.getEmail());
+        if (existingUser.isPresent()) {
+            throw new IllegalArgumentException("Email already exists");
+        }
+
+        // Find branch by name
+        Branch branch = branchRepository.findByName(dto.getBranch())
+            .orElseThrow(() -> new IllegalArgumentException("Branch not found: " + dto.getBranch()));
+
+        // Generate random 6-character password
+        String randomPassword = emailService.generateRandomPassword();
+
+        // Create new user
+        User newUser = new User();
+        newUser.setEmail(dto.getEmail());
+        newUser.setUsername(dto.getEmail()); // Use email as username
+        newUser.setRole(dto.getRole().toUpperCase());
+        newUser.setBranch(branch);
+        
+        // Generate a random token for activation
+        newUser.setToken(UUID.randomUUID().toString());
+        
+        // Set the generated random password
+        newUser.setPassword(randomPassword);
+        
+        // Set initial states
+        newUser.setIs_Active(true); // User can login immediately
+        newUser.setIs_Blocked(false);
+
+        // Save user to database
+        User saved = userRepository.save(newUser);
+        
+        // Send welcome email with credentials
+        try {
+            System.out.println("Attempting to send email to: " + saved.getEmail());
+            emailService.sendWelcomeEmail(
+                saved.getEmail(),
+                randomPassword,
+                saved.getRole(),
+                branch.getName()
+            );
+            System.out.println("Email sent successfully!");
+        } catch (Exception e) {
+            // Log detailed error information
+            System.err.println("=== EMAIL SENDING FAILED ===");
+            System.err.println("Error message: " + e.getMessage());
+            System.err.println("Error type: " + e.getClass().getName());
+            e.printStackTrace();
+            System.err.println("===========================");
+            // If email fails, still return the created user but log the error
+            System.err.println("User created but email failed: " + e.getMessage());
+        }
+
+        return toDto(saved);
     }
 }
