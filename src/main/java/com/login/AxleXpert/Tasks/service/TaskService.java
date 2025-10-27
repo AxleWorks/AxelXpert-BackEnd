@@ -13,11 +13,13 @@ import com.login.AxleXpert.bookings.Booking;
 import com.login.AxleXpert.bookings.BookingRepository;
 import com.login.AxleXpert.Tasks.dto.CreateSubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.CreateTaskNoteDTO;
+import com.login.AxleXpert.Tasks.dto.EmployeeTaskDTO;
 import com.login.AxleXpert.Tasks.dto.SubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.TaskDTO;
 import com.login.AxleXpert.Tasks.dto.TaskImageDTO;
 import com.login.AxleXpert.Tasks.dto.TaskNoteDTO;
 import com.login.AxleXpert.Tasks.dto.UpdateSubTaskDTO;
+import com.login.AxleXpert.Tasks.dto.UpdateTaskDTO;
 import com.login.AxleXpert.Tasks.entity.SubTask;
 import com.login.AxleXpert.Tasks.entity.Task;
 import com.login.AxleXpert.Tasks.entity.TaskImage;
@@ -94,9 +96,9 @@ public class TaskService {
     }
 
     @Transactional(readOnly = true)
-    public List<TaskDTO> getTasksByEmployee(Long employeeId) {
-        List<Task> tasks = taskRepository.findByAssignedEmployeeId(employeeId);
-        return tasks.stream().map(this::toTaskDTO).collect(Collectors.toList());
+    public List<EmployeeTaskDTO> getTasksByEmployee(Long employeeId) {
+        List<Task> tasks = taskRepository.findByAssignedEmployeeIdWithBooking(employeeId);
+        return tasks.stream().map(this::toEmployeeTaskDTO).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -115,14 +117,36 @@ public class TaskService {
         return taskRepository.findByBookingId(bookingId).map(this::toTaskDTO);
     }
 
-    public TaskDTO updateTaskStatus(Long taskId, TaskStatus status) {
+    // public TaskDTO updateTaskStatus(Long taskId, TaskStatus status) {
+    //     Optional<Task> taskOpt = taskRepository.findById(taskId);
+    //     if (taskOpt.isEmpty()) {
+    //         throw new IllegalArgumentException("Task not found with id: " + taskId);
+    //     }
+
+    //     Task task = taskOpt.get();
+    //     task.setStatus(status);
+    //     Task savedTask = taskRepository.save(task);
+    //     return toTaskDTO(savedTask);
+    // }
+
+    public TaskDTO updateTask(Long taskId, UpdateTaskDTO updateTaskDTO) {
         Optional<Task> taskOpt = taskRepository.findById(taskId);
         if (taskOpt.isEmpty()) {
             throw new IllegalArgumentException("Task not found with id: " + taskId);
         }
 
         Task task = taskOpt.get();
-        task.setStatus(status);
+        
+        if (updateTaskDTO.status() != null) {
+            task.setStatus(updateTaskDTO.status());
+        }
+        if (updateTaskDTO.startTime() != null) {
+            task.setStartTime(updateTaskDTO.startTime());
+        }
+        if (updateTaskDTO.completedTime() != null) {
+            task.setCompletedTime(updateTaskDTO.completedTime());
+        }
+
         Task savedTask = taskRepository.save(task);
         return toTaskDTO(savedTask);
     }
@@ -216,6 +240,7 @@ public class TaskService {
         taskNote.setAuthor(author);
         taskNote.setNoteType(createTaskNoteDTO.noteType());
         taskNote.setContent(createTaskNoteDTO.content());
+        taskNote.setVisibleToCustomer(createTaskNoteDTO.visibleToCustomer());
 
         TaskNote savedNote = taskNoteRepository.save(taskNote);
         return toTaskNoteDTO(savedNote);
@@ -295,6 +320,25 @@ public class TaskService {
                 subTasks,
                 taskNotes,
                 taskImages,
+                task.getCreatedAt(),
+                task.getUpdatedAt()
+        );
+    }
+
+    private EmployeeTaskDTO toEmployeeTaskDTO(Task task) {
+        return new EmployeeTaskDTO(
+                task.getId(),
+                task.getBooking().getCustomerName(),
+                task.getBooking().getVehicle(),
+                task.getBooking().getService().getDurationMinutes(),
+                task.getTitle(),
+                task.getDescription(),
+                task.getStatus(),
+                task.getSubTasks().stream()
+                        .map(this::toSubTaskDTO)
+                        .collect(Collectors.toList()),
+                task.getStartTime(),
+                task.getCompletedTime(),
                 task.getCreatedAt(),
                 task.getUpdatedAt()
         );
