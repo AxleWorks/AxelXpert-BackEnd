@@ -114,6 +114,25 @@ public class UserService {
     }
 
     @Transactional
+    public Optional<UserDTO> updateUsername(Long id, String newUsername) {
+        if (newUsername == null || newUsername.trim().isEmpty()) {
+            return Optional.empty();
+        }
+        
+        // Check if username already exists (excluding current user)
+        Optional<User> existingUser = userRepository.findByUsername(newUsername.trim());
+        if (existingUser.isPresent() && !existingUser.get().getId().equals(id)) {
+            throw new IllegalArgumentException("Username already exists");
+        }
+        
+        return userRepository.findById(id).map(user -> {
+            user.setUsername(newUsername.trim());
+            User saved = userRepository.save(user);
+            return toDto(saved);
+        });
+    }
+
+    @Transactional
     public boolean changePassword(Long id, ChangePasswordDTO dto) {
         if (dto == null || dto.getCurrentPassword() == null || dto.getNewPassword() == null) {
             return false;

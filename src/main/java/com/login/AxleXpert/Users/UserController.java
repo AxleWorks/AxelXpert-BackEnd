@@ -83,6 +83,22 @@ public class UserController {
         .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    // Update username - allows employees to change their username after login
+    @PutMapping("/{id}/username")
+    public ResponseEntity<?> updateUsername(@PathVariable Long id, @RequestBody UpdateUsernameDTO dto) {
+        if (dto == null || dto.getUsername() == null || dto.getUsername().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Username is required");
+        }
+        
+        try {
+            return userService.updateUsername(id, dto.getUsername())
+                .map(user -> ResponseEntity.ok(user))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     // Change password for a user: requires current password and new password
     @PutMapping("/{id}/password")
     public ResponseEntity<String> changePassword(@PathVariable Long id, @RequestBody ChangePasswordDTO dto) {
