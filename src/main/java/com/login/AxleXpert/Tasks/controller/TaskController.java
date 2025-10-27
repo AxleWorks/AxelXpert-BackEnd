@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -19,11 +20,13 @@ import org.springframework.web.bind.annotation.RestController;
 import com.login.AxleXpert.Tasks.dto.CreateSubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.CreateTaskImageDTO;
 import com.login.AxleXpert.Tasks.dto.CreateTaskNoteDTO;
+import com.login.AxleXpert.Tasks.dto.EmployeeTaskDTO;
 import com.login.AxleXpert.Tasks.dto.SubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.TaskDTO;
 import com.login.AxleXpert.Tasks.dto.TaskImageDTO;
 import com.login.AxleXpert.Tasks.dto.TaskNoteDTO;
 import com.login.AxleXpert.Tasks.dto.UpdateSubTaskDTO;
+import com.login.AxleXpert.Tasks.dto.UpdateTaskDTO;
 import com.login.AxleXpert.Tasks.service.TaskService;
 import com.login.AxleXpert.common.dto.ErrorResponse;
 import com.login.AxleXpert.common.enums.NoteType;
@@ -42,8 +45,8 @@ public class TaskController {
     }
 
     @GetMapping("/employee/{employeeId}")
-    public ResponseEntity<List<TaskDTO>> getTasksByEmployee(@PathVariable Long employeeId) {
-        List<TaskDTO> tasks = taskService.getTasksByEmployee(employeeId);
+    public ResponseEntity<List<EmployeeTaskDTO>> getTasksByEmployee(@PathVariable Long employeeId) {
+        List<EmployeeTaskDTO> tasks = taskService.getTasksByEmployee(employeeId);
         return ResponseEntity.ok(tasks);
 
     }
@@ -74,11 +77,26 @@ public class TaskController {
         return ResponseEntity.ok(task.get());
     }
 
-    @PutMapping("/{taskId}/status")
-    public ResponseEntity<?> updateTaskStatus(@PathVariable Long taskId, 
-                                            @RequestParam TaskStatus status) {
+
+    // Implemented a new endpoint to update task status, starttime and end time, below endpoint is commented for refeence.
+
+    // @PutMapping("/{taskId}/status")
+    // public ResponseEntity<?> updateTaskStatus(@PathVariable Long taskId, 
+    //                                         @RequestParam TaskStatus status) {
+    //     try {
+    //         TaskDTO updatedTask = taskService.updateTaskStatus(taskId, status);
+    //         return ResponseEntity.ok(updatedTask);
+    //     } catch (IllegalArgumentException e) {
+    //         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+    //                 .body(new ErrorResponse(e.getMessage()));
+    //     }
+    // }
+
+    @PatchMapping("/{taskId}")
+    public ResponseEntity<?> updateTask(@PathVariable Long taskId, 
+                                        @RequestBody UpdateTaskDTO updateTaskDTO) {
         try {
-            TaskDTO updatedTask = taskService.updateTaskStatus(taskId, status);
+            TaskDTO updatedTask = taskService.updateTask(taskId, updateTaskDTO);
             return ResponseEntity.ok(updatedTask);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -99,7 +117,7 @@ public class TaskController {
         }
     }
 
-    @PutMapping("/subtasks/{subTaskId}")
+    @PatchMapping("/subtasks/{subTaskId}")
     public ResponseEntity<?> updateSubTask(@PathVariable Long subTaskId, 
                                          @RequestBody UpdateSubTaskDTO updateSubTaskDTO) {
         try {
