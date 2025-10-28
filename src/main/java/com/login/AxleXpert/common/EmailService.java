@@ -76,10 +76,10 @@ public class EmailService {
                                 <tr>
                                     <td style="padding: 40px 30px 30px 30px;">
                                         <h2 style="margin: 0 0 20px 0; color: #1a202c; font-size: 24px; font-weight: 600;">
-                                            Welcome Aboard! 🎉
+                                            Welcome to AxleXpert!
                                         </h2>
                                         <p style="margin: 0 0 20px 0; color: #4a5568; font-size: 16px; line-height: 1.6;">
-                                            We're thrilled to have you join the <strong>AxleXpert</strong> team! Your account has been successfully created and you're all set to start managing automotive services with ease.
+                                            We're thrilled to have you join the <strong>AxleXpert</strong> team! Your account has been successfully created as a <strong>%s</strong> at <strong>%s</strong> branch.
                                         </p>
                                     </td>
                                 </tr>
@@ -89,43 +89,25 @@ public class EmailService {
                                     <td style="padding: 0 30px 30px 30px;">
                                         <div style="background-color: #f7fafc; border-left: 4px solid #667eea; border-radius: 8px; padding: 25px;">
                                             <h3 style="margin: 0 0 20px 0; color: #2d3748; font-size: 18px; font-weight: 600;">
-                                                🔐 Your Login Credentials
+                                                Your Login Credentials
                                             </h3>
                                             <table style="width: 100%%; border-collapse: collapse;">
                                                 <tr>
-                                                    <td style="padding: 8px 0; color: #718096; font-size: 14px; font-weight: 600; width: 120px;">
+                                                    <td style="padding: 10px 0; color: #718096; font-size: 14px; font-weight: 600; width: 120px;">
                                                         Email:
                                                     </td>
-                                                    <td style="padding: 8px 0; color: #2d3748; font-size: 14px; font-weight: 500;">
+                                                    <td style="padding: 10px 0; color: #2d3748; font-size: 15px; font-weight: 500;">
                                                         %s
                                                     </td>
                                                 </tr>
                                                 <tr>
-                                                    <td style="padding: 8px 0; color: #718096; font-size: 14px; font-weight: 600;">
+                                                    <td style="padding: 10px 0; color: #718096; font-size: 14px; font-weight: 600;">
                                                         Password:
                                                     </td>
-                                                    <td style="padding: 8px 0;">
-                                                        <code style="background-color: #edf2f7; color: #e53e3e; padding: 6px 12px; border-radius: 4px; font-size: 15px; font-weight: 600; letter-spacing: 1px;">
+                                                    <td style="padding: 10px 0;">
+                                                        <code style="background-color: #edf2f7; color: #e53e3e; padding: 8px 14px; border-radius: 4px; font-size: 16px; font-weight: 700; letter-spacing: 2px;">
                                                             %s
                                                         </code>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td style="padding: 8px 0; color: #718096; font-size: 14px; font-weight: 600;">
-                                                        Role:
-                                                    </td>
-                                                    <td style="padding: 8px 0;">
-                                                        <span style="background-color: #c3dafe; color: #2c5282; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 600; text-transform: uppercase;">
-                                                            %s
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td style="padding: 8px 0; color: #718096; font-size: 14px; font-weight: 600;">
-                                                        Branch:
-                                                    </td>
-                                                    <td style="padding: 8px 0; color: #2d3748; font-size: 14px; font-weight: 500;">
-                                                        📍 %s
                                                     </td>
                                                 </tr>
                                             </table>
@@ -149,13 +131,13 @@ public class EmailService {
                                 <tr>
                                     <td style="padding: 0 30px 30px 30px;">
                                         <h3 style="margin: 0 0 15px 0; color: #2d3748; font-size: 18px; font-weight: 600;">
-                                            🚀 Next Steps
+                                            Next Steps
                                         </h3>
                                         <ul style="margin: 0; padding-left: 20px; color: #4a5568; font-size: 15px; line-height: 1.8;">
-                                            <li>Login to your AxleXpert account</li>
-                                            <li>Update your password in settings</li>
+                                            <li>Login to your AxleXpert account using the credentials above</li>
+                                            <li>Update your password in settings for security</li>
                                             <li>Complete your profile information</li>
-                                            <li>Explore the dashboard and features</li>
+                                            <li>Explore the dashboard and available features</li>
                                         </ul>
                                     </td>
                                 </tr>
@@ -180,7 +162,7 @@ public class EmailService {
                 </table>
             </body>
             </html>
-            """, email, password, role, branchName);
+            """, role, branchName, email, password);
     }
 
     //Generate a random 6-character password
