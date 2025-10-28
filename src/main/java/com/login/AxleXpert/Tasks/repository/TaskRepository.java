@@ -13,14 +13,15 @@ import com.login.AxleXpert.common.enums.TaskStatus;
 
 @Repository
 public interface TaskRepository extends JpaRepository<Task, Long> {
-    
-    List<Task> findByAssignedEmployeeId(Long employeeId);
-    
+
+    @Query("SELECT t FROM Task t LEFT JOIN FETCH t.booking b LEFT JOIN FETCH b.service WHERE t.assignedEmployee.id = :employeeId")
+    List<Task> findByAssignedEmployeeIdWithBooking(@Param("employeeId") Long employeeId);
+
     Optional<Task> findByBookingId(Long bookingId);
-    
+
     @Query("SELECT t FROM Task t WHERE t.booking.customer.id = :customerId")
     List<Task> findByCustomerId(@Param("customerId") Long customerId);
-    
+
     @Query("SELECT t FROM Task t WHERE t.assignedEmployee.id = :employeeId AND t.status = :status")
     List<Task> findByAssignedEmployeeIdAndStatus(@Param("employeeId") Long employeeId, 
                                                  @Param("status") TaskStatus status);
