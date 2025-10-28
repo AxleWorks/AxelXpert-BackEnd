@@ -23,6 +23,9 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     List<Task> findByCustomerId(@Param("customerId") Long customerId);
 
     @Query("SELECT t FROM Task t WHERE t.assignedEmployee.id = :employeeId AND t.status = :status")
-    List<Task> findByAssignedEmployeeIdAndStatus(@Param("employeeId") Long employeeId,
-            @Param("status") TaskStatus status);
+    List<Task> findByAssignedEmployeeIdAndStatus(@Param("employeeId") Long employeeId, 
+                                                 @Param("status") TaskStatus status);
+    
+    // Check if user has any assigned tasks
+    boolean existsByAssignedEmployeeId(Long employeeId);
 }
