@@ -5,4 +5,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
+	boolean existsByBranch_IdAndStartAt(Long branchId, java.time.LocalDateTime startAt);
 }
