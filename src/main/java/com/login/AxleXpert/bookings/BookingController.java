@@ -138,11 +138,12 @@ public class BookingController {
                     if (req.time() != null && !req.time().isBlank()) {
                         try {
                             java.time.LocalDate d = java.time.LocalDate.parse(date);
-                            java.time.format.DateTimeFormatter tf = java.time.format.DateTimeFormatter.ofPattern("hh:mm a");
-                            java.time.LocalTime t = java.time.LocalTime.parse(req.time().trim(), tf);
+                            java.time.LocalTime t = parseTimeFlexibly(req.time().trim());
                             startAtStr = java.time.LocalDateTime.of(d, t).toString();
                         } catch (Exception ex) {
-                            // fallback: keep date string
+                            log.warn("Failed to parse date/time combination: date='{}', time='{}', error: {}", 
+                                    date, req.time(), ex.getMessage());
+                            // fallback: keep date string (this will cause an error in service layer)
                             startAtStr = date;
                         }
                     } else {
@@ -200,5 +201,40 @@ public class BookingController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ErrorResponse("Failed to delete booking: " + e.getMessage()));
         }
+    }
+
+    /**
+     * Parse time string flexibly - handles multiple formats:
+     * - "HH:mm" (24-hour format like "09:00", "15:30")
+     * - "HH:mm:ss" (24-hour with seconds like "09:00:00")
+     * - "hh:mm a" (12-hour with AM/PM like "09:00 AM")
+     * - "h:mm a" (12-hour single digit hour like "9:00 AM")
+     */
+    private java.time.LocalTime parseTimeFlexibly(String timeStr) {
+        if (timeStr == null || timeStr.isBlank()) {
+            throw new IllegalArgumentException("Time string cannot be null or blank");
+        }
+
+        String time = timeStr.trim();
+        
+        // Try different time formats
+        java.time.format.DateTimeFormatter[] formatters = {
+            java.time.format.DateTimeFormatter.ofPattern("HH:mm"),       // "09:00", "15:30"
+            java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"),    // "09:00:00"
+            java.time.format.DateTimeFormatter.ofPattern("hh:mm a"),     // "09:00 AM"
+            java.time.format.DateTimeFormatter.ofPattern("h:mm a"),      // "9:00 AM"
+            java.time.format.DateTimeFormatter.ofPattern("H:mm"),        // "9:00" (single digit hour)
+        };
+
+        for (java.time.format.DateTimeFormatter formatter : formatters) {
+            try {
+                return java.time.LocalTime.parse(time, formatter);
+            } catch (java.time.format.DateTimeParseException ignored) {
+                // Try next format
+            }
+        }
+        
+        throw new IllegalArgumentException("Unable to parse time: " + timeStr + 
+            ". Supported formats: HH:mm, HH:mm:ss, hh:mm a, h:mm a");
     }
 }
