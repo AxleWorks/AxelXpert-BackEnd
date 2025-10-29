@@ -12,6 +12,8 @@ import com.login.AxleXpert.Users.User;
 import com.login.AxleXpert.Users.UserRepository;
 import com.login.AxleXpert.bookings.dto.BookingDTO;
 import com.login.AxleXpert.common.enums.BookingStatus;
+import com.login.AxleXpert.Branches.BranchRepository;
+import com.login.AxleXpert.Services.ServiceRepository;
 
 @Service
 @Transactional
@@ -20,11 +22,16 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
     private final TaskService taskService;
+    private final BranchRepository branchRepository;
+    private final ServiceRepository serviceRepository;
 
-    public BookingService(BookingRepository bookingRepository, UserRepository userRepository, TaskService taskService) {
+    public BookingService(BookingRepository bookingRepository, UserRepository userRepository, TaskService taskService,
+                          BranchRepository branchRepository, ServiceRepository serviceRepository) {
         this.bookingRepository = bookingRepository;
         this.userRepository = userRepository;
         this.taskService = taskService;
+        this.branchRepository = branchRepository;
+        this.serviceRepository = serviceRepository;
     }
 
     @Transactional(readOnly = true)
@@ -133,6 +140,113 @@ public class BookingService {
         return Optional.of(toDto(savedBooking));
     }
 
+    /**
+     * Delete a booking by id.
+     * @param bookingId id to delete
+     * @return true if deleted, false if not found
+     */
+    public boolean deleteBooking(Long bookingId) {
+        var bookingOpt = bookingRepository.findById(bookingId);
+        if (bookingOpt.isEmpty()) return false;
+        bookingRepository.delete(bookingOpt.get());
+        return true;
+    }
+
+    public BookingDTO createBooking(BookingDTO dto) {
+        // Basic validation
+        if (dto == null) {
+            throw new IllegalArgumentException("Booking data is required");
+        }
+
+        // startAt is optional for customer requests. If not provided, default to now().
+
+        if (dto.branchId() == null) {
+            throw new IllegalArgumentException("branchId is required");
+        }
+
+        if (dto.serviceId() == null) {
+            throw new IllegalArgumentException("serviceId is required");
+        }
+
+        if (dto.customerId() == null) {
+            throw new IllegalArgumentException("customerId is required");
+        }
+
+    java.time.LocalDateTime startAt;
+    if (dto.startAt() == null || dto.startAt().isBlank()) {
+        startAt = java.time.LocalDateTime.now();
+    } else {
+        startAt = parseDateTime(dto.startAt());
+    }
+
+        // Check duplicate booking at same branch and start time
+        if (bookingRepository.existsByBranch_IdAndStartAt(dto.branchId(), startAt)) {
+            throw new IllegalStateException("Booking slot already taken for this branch and time");
+        }
+
+        // Fetch related entities
+        var branchOpt = branchRepository.findById(dto.branchId());
+        if (branchOpt.isEmpty()) {
+            throw new IllegalArgumentException("Branch not found with id: " + dto.branchId());
+        }
+
+        var serviceOpt = serviceRepository.findById(dto.serviceId());
+        if (serviceOpt.isEmpty()) {
+            throw new IllegalArgumentException("Service not found with id: " + dto.serviceId());
+        }
+
+        var customerOpt = userRepository.findById(dto.customerId());
+        if (customerOpt.isEmpty()) {
+            throw new IllegalArgumentException("Customer not found with id: " + dto.customerId());
+        }
+
+        // Build booking
+        Booking booking = new Booking();
+        booking.setCustomer(customerOpt.get());
+        booking.setCustomerName(dto.customerName() != null ? dto.customerName() : dto.customerId().toString());
+        booking.setCustomerPhone(dto.customerPhone());
+        booking.setVehicle(dto.vehicle());
+        booking.setBranch(branchOpt.get());
+        booking.setService(serviceOpt.get());
+        booking.setStartAt(startAt);
+
+        // endAt and totalPrice will be populated by @PrePersist if service/duration present
+        booking.setStatus(BookingStatus.PENDING);
+        booking.setNotes(dto.notes());
+
+        Booking saved = bookingRepository.save(booking);
+
+        return toDto(saved);
+    }
+
+    /**
+     * Parse a date/time string into LocalDateTime using multiple strategies:
+     * - OffsetDateTime (e.g. 2025-10-24T09:00:00Z or with offset)
+     * - Instant (ISO instant)
+     * - LocalDateTime (ISO local)
+     */
+    private java.time.LocalDateTime parseDateTime(String input) {
+        if (input == null) return null;
+        String s = input.trim();
+        try {
+            java.time.OffsetDateTime odt = java.time.OffsetDateTime.parse(s);
+            return odt.toLocalDateTime();
+        } catch (java.time.format.DateTimeParseException ex) {
+            // try Instant
+            try {
+                java.time.Instant instant = java.time.Instant.parse(s);
+                return java.time.LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault());
+            } catch (java.time.DateTimeException ex2) {
+                // try LocalDateTime
+                try {
+                    return java.time.LocalDateTime.parse(s, java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                } catch (java.time.format.DateTimeParseException ex3) {
+                    throw new IllegalArgumentException("Unable to parse date/time: " + s);
+                }
+            }
+        }
+    }
+
     private BookingDTO toDto(Booking b) {
         Long customerId = b.getCustomer() != null ? b.getCustomer().getId() : null;
         Long branchId = b.getBranch() != null ? b.getBranch().getId() : null;
@@ -142,7 +256,10 @@ public class BookingService {
         String serviceName = b.getService() != null ? b.getService().getName() : null;
         String assignedEmployeeName = b.getAssignedEmployee() != null ? b.getAssignedEmployee().getUsername() : null;
 
-        return new BookingDTO(
+    String startAtStr = b.getStartAt() != null ? b.getStartAt().toString() : null;
+    String endAtStr = b.getEndAt() != null ? b.getEndAt().toString() : null;
+
+    return new BookingDTO(
                 b.getId(),
                 customerId,
                 b.getCustomerName(),
@@ -152,8 +269,8 @@ public class BookingService {
                 branchName,
                 serviceId,
                 serviceName,
-                b.getStartAt(),
-                b.getEndAt(),
+        startAtStr,
+        endAtStr,
                 b.getStatus(),
                 assignedEmployeeId,
                 assignedEmployeeName,
