@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.login.AxleXpert.BookingCalender.UserBookings.Booking;
+import com.login.AxleXpert.bookings.Booking;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;

@@ -3,20 +3,35 @@ package com.login.AxleXpert.Users;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.login.AxleXpert.Branches.Branch;
 import com.login.AxleXpert.Branches.BranchRepository;
+import com.login.AxleXpert.Tasks.repository.TaskRepository;
+import com.login.AxleXpert.bookings.BookingRepository;
+import com.login.AxleXpert.common.EmailService;
 
 @Service
 public class UserService {
     private final UserRepository userRepository;
     private final BranchRepository branchRepository;
+    private final BookingRepository bookingRepository;
+    private final TaskRepository taskRepository;
+    private final EmailService emailService;
 
-    public UserService(UserRepository userRepository, BranchRepository branchRepository) {
+    public UserService(UserRepository userRepository, 
+                      BranchRepository branchRepository,
+                      BookingRepository bookingRepository,
+                      TaskRepository taskRepository,
+                      EmailService emailService) {
         this.userRepository = userRepository;
         this.branchRepository = branchRepository;
+        this.bookingRepository = bookingRepository;
+        this.taskRepository = taskRepository;
+        this.emailService = emailService;
     }
     // Convert entity -> DTO
     private UserDTO toDto(User user) {
@@ -35,6 +50,8 @@ public class UserService {
                 user.getIs_Active(),
                 user.getAddress(),
                 user.getPhoneNumber(),
+                user.getProfileImageUrl(),
+                user.getCloudinaryPublicId(),
                 branchId,
                 branchName,
                 user.getCreatedAt(),
@@ -97,6 +114,25 @@ public class UserService {
     }
 
     @Transactional
+    public Optional<UserDTO> updateUsername(Long id, String newUsername) {
+        if (newUsername == null || newUsername.trim().isEmpty()) {
+            return Optional.empty();
+        }
+        
+        // Check if username already exists (excluding current user)
+        Optional<User> existingUser = userRepository.findByUsername(newUsername.trim());
+        if (existingUser.isPresent() && !existingUser.get().getId().equals(id)) {
+            throw new IllegalArgumentException("Username already exists");
+        }
+        
+        return userRepository.findById(id).map(user -> {
+            user.setUsername(newUsername.trim());
+            User saved = userRepository.save(user);
+            return toDto(saved);
+        });
+    }
+
+    @Transactional
     public boolean changePassword(Long id, ChangePasswordDTO dto) {
         if (dto == null || dto.getCurrentPassword() == null || dto.getNewPassword() == null) {
             return false;
@@ -115,5 +151,156 @@ public class UserService {
             userRepository.save(user);
             return true;
         }).orElse(false);
+    }
+
+    @Transactional
+    public Optional<UserDTO> updateProfileImage(Long id, ProfileImageUpdateDTO dto) {
+        if (dto == null || dto.getProfileImageUrl() == null || dto.getCloudinaryPublicId() == null) {
+            return Optional.empty();
+        }
+        
+        return userRepository.findById(id).map(user -> {
+            user.setProfileImageUrl(dto.getProfileImageUrl());
+            user.setCloudinaryPublicId(dto.getCloudinaryPublicId());
+            User saved = userRepository.save(user);
+            return toDto(saved);
+        });
+    }
+
+    @Transactional
+    public Optional<UserDTO> deleteProfileImage(Long id) {
+        return userRepository.findById(id).map(user -> {
+            user.setProfileImageUrl(null);
+            user.setCloudinaryPublicId(null);
+            User saved = userRepository.save(user);
+            return toDto(saved);
+        });
+    }
+
+    public List<UserDTO> getAllUsers() {
+        return userRepository.findAll().stream().map(this::toDto).toList();
+    }
+
+    //Block or unblock a user by ID.
+    @Transactional
+    public Optional<UserDTO> blockUser(Long id, boolean blocked) {
+        // Check if user exists
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        
+        // If trying to block (not unblock), check for dependencies
+        if (blocked) {
+            // Check if user has any bookings (as customer or assigned employee)
+            boolean hasBookingsAsCustomer = bookingRepository.existsByCustomerId(id);
+            boolean hasBookingsAsEmployee = bookingRepository.existsByAssignedEmployeeId(id);
+            
+            // Check if user has any assigned tasks
+            boolean hasTasks = taskRepository.existsByAssignedEmployeeId(id);
+            
+            // User cannot be blocked if they have bookings or tasks
+            if (hasBookingsAsCustomer || hasBookingsAsEmployee || hasTasks) {
+                return Optional.empty();
+            }
+        }
+        
+        // Safe to update block status
+        user.setIs_Blocked(blocked);
+        User saved = userRepository.save(user);
+        return Optional.of(toDto(saved));
+    }
+
+    //Delete a user by ID.
+    @Transactional
+    public boolean deleteUser(Long id) {
+        // Check if user exists
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        
+        // Check if user has any bookings (as customer or assigned employee)
+        boolean hasBookingsAsCustomer = bookingRepository.existsByCustomerId(id);
+        boolean hasBookingsAsEmployee = bookingRepository.existsByAssignedEmployeeId(id);
+        
+        // Check if user has any assigned tasks
+        boolean hasTasks = taskRepository.existsByAssignedEmployeeId(id);
+        
+        // User cannot be deleted if they have bookings or tasks
+        if (hasBookingsAsCustomer || hasBookingsAsEmployee || hasTasks) {
+            return false;
+        }
+        
+        // Safe to delete
+        userRepository.delete(user);
+        return true;
+    }
+
+    // Add a new employee
+    @Transactional
+    public UserDTO addEmployee(AddEmployeeDTO dto) {
+        // Validate input
+        if (dto.getEmail() == null || dto.getEmail().trim().isEmpty()) {
+            throw new IllegalArgumentException("Email is required");
+        }
+        if (dto.getRole() == null || dto.getRole().trim().isEmpty()) {
+            throw new IllegalArgumentException("Role is required");
+        }
+        if (dto.getBranch() == null || dto.getBranch().trim().isEmpty()) {
+            throw new IllegalArgumentException("Branch is required");
+        }
+
+        // Check if email already exists
+        Optional<User> existingUser = userRepository.findByEmail(dto.getEmail());
+        if (existingUser.isPresent()) {
+            throw new IllegalArgumentException("Email already exists");
+        }
+
+        // Find branch by name
+        Branch branch = branchRepository.findByName(dto.getBranch())
+            .orElseThrow(() -> new IllegalArgumentException("Branch not found: " + dto.getBranch()));
+
+        // Generate random 6-character password
+        String randomPassword = emailService.generateRandomPassword();
+
+        // Create new user
+        User newUser = new User();
+        newUser.setEmail(dto.getEmail());
+        newUser.setUsername(dto.getEmail()); // Use email as username
+        newUser.setRole(dto.getRole().toUpperCase());
+        newUser.setBranch(branch);
+        
+        // Generate a random token for activation
+        newUser.setToken(UUID.randomUUID().toString());
+        
+        // Set the generated random password
+        newUser.setPassword(randomPassword);
+        
+        // Set initial states
+        newUser.setIs_Active(true); // User can login immediately
+        newUser.setIs_Blocked(false);
+
+        // Save user to database
+        User saved = userRepository.save(newUser);
+        
+        // Send welcome email with credentials
+        try {
+            System.out.println("Attempting to send email to: " + saved.getEmail());
+            emailService.sendWelcomeEmail(
+                saved.getEmail(),
+                randomPassword,
+                saved.getRole(),
+                branch.getName()
+            );
+            System.out.println("Email sent successfully!");
+        } catch (Exception e) {
+            // Log detailed error information
+            System.err.println("=== EMAIL SENDING FAILED ===");
+            System.err.println("Error message: " + e.getMessage());
+            System.err.println("Error type: " + e.getClass().getName());
+            e.printStackTrace();
+            System.err.println("===========================");
+            // If email fails, still return the created user but log the error
+            System.err.println("User created but email failed: " + e.getMessage());
+        }
+
+        return toDto(saved);
     }
 }

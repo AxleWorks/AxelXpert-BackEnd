@@ -1,8 +1,9 @@
-package com.login.AxleXpert.BookingCalender.UserBookings;
+package com.login.AxleXpert.bookings.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.login.AxleXpert.common.enums.BookingStatus;
 
 /**
  * Flat Booking DTO used by the demo controller and JSON resource.
@@ -17,8 +18,8 @@ public record BookingDTO(
         String branchName,
         Long serviceId,
         String serviceName,
-        LocalDateTime startAt,
-        LocalDateTime endAt,
+        String startAt,
+        String endAt,
         BookingStatus status,
         Long assignedEmployeeId,
         String assignedEmployeeName,
