@@ -46,7 +46,7 @@ public class AuthController {
                 // Build response with id, username, email and role (don't include password)
                 UserDTO_Auth u = userService.getUserByEmail(dto.getEmail());
                 if (u == null) return ResponseEntity.status(500).body("Unexpected error: user not found");
-                LoginResponse resp = new LoginResponse(u.getId(), u.getUsername(), u.getEmail(), u.getRole(),u.getJWTToken());
+                LoginResponse resp = new LoginResponse(u.getJWTToken());
                 return ResponseEntity.ok(resp);
             case "NOT_FOUND":
                 return ResponseEntity.status(404).body("User not found");
