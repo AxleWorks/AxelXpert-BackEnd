@@ -3,7 +3,6 @@ package com.login.AxleXpert.auth;
 import java.security.SecureRandom;
 import java.util.Base64;
 
-import com.login.AxleXpert.security.JwtUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import com.login.AxleXpert.Users.User;
 import com.login.AxleXpert.Users.UserRepository;
+import com.login.AxleXpert.security.JwtUtil;
 
 import jakarta.mail.internet.MimeMessage;
 
@@ -185,7 +185,7 @@ public class AuthService {
 
     public UserDTO_Auth getUserByEmail(String email) {
           User user = userRepository.findByEmail(email).orElse(null);
-        String token = jwtUtil.generateToken(user.getUsername());
+        String token = jwtUtil.generateToken(user);
         System.out.println(token);
         return new UserDTO_Auth(
                 user.getId(),
