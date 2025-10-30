@@ -20,7 +20,7 @@ public class AuthController {
     public ResponseEntity<?> signup(@RequestBody SignupDTO dto) {
         try {
             String activationLink = userService.registerUser(dto.getUsername(), dto.getPassword(), dto.getEmail());
-            // In production you would send the activationLink to the user's email. For now return it so frontend/test can use it.
+            // In production, you would send the activationLink to the user's email. For now return it so frontend/test can use it.
             return ResponseEntity.ok("User created. Activation link: " + activationLink);
         } catch (RuntimeException e) {
             String msg = e.getMessage();
@@ -64,6 +64,22 @@ public class AuthController {
     @GetMapping("/status")
     public ResponseEntity<?> status() {
         return ResponseEntity.ok("Authentication service is running");
+    }
+
+    // TEMPORARY DEBUG ENDPOINT - Remove after testing
+    @GetMapping("/debug-password")
+    public ResponseEntity<?> debugPassword(@RequestParam String password) {
+        org.springframework.security.crypto.password.PasswordEncoder encoder = 
+            new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+        
+        String dbHash = "$2a$10$xQj5Ci3KZV4TbSiCpAZjR.ywKz2sXRMfkHvLbYSZQcJGKxVyqvJDW";
+        boolean matches = encoder.matches(password, dbHash);
+        
+        return ResponseEntity.ok(
+            "Password: " + password + "\n" +
+            "DB Hash: " + dbHash + "\n" +
+            "Matches: " + matches
+        );
     }
 
     // Simple endpoint to test SMTP connectivity from the running app. Call with ?to=you@example.com

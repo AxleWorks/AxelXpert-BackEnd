@@ -1,6 +1,4 @@
-package com.login.AxleXpert.security;
-
-import java.util.List;
+package com.login.AxleXpert.Security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,11 +7,15 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -28,45 +30,40 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // ✅ Enable CORS before security checks
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
-                // ✅ Disable CSRF for REST APIs
                 .csrf(csrf -> csrf.disable())
-
-                // ✅ Define authorization rules
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/status","api/health").permitAll() // Public endpoints (login/signup, checkstatus)
-                        .anyRequest().authenticated() // All others require JWT
+                        .requestMatchers("/api/auth/**").permitAll()  // Public: login, signup
+                        .anyRequest().authenticated()                  // Protected: needs JWT
                 )
-
-                // ✅ Stateless session (no cookies)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        // ✅ Add custom JWT filter after enabling CORS
+        // Add JWT filter before Spring Security's authentication filter
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // ✅ Define the CORS configuration here
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // Replace with your frontend URL
         config.setAllowedOriginPatterns(List.of("*"));
-
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Authorization"));
         config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
     }
 
-    // ✅ For AuthenticationManager injection
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
