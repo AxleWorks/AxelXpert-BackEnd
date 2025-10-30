@@ -7,14 +7,19 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.login.AxleXpert.Users.User;
+import com.login.AxleXpert.Users.UserRepository;
+
 @Service
 @Transactional
 public class BranchService {
 
     private final BranchRepository branchRepository;
+    private final UserRepository userRepository;
 
-    public BranchService(BranchRepository branchRepository) {
+    public BranchService(BranchRepository branchRepository, UserRepository userRepository) {
         this.branchRepository = branchRepository;
+        this.userRepository = userRepository;
     }
 
     @Transactional(readOnly = true)
@@ -41,6 +46,13 @@ public class BranchService {
         branch.setOpenHours(branchDTO.getOpenHours());
         branch.setCloseHours(branchDTO.getCloseHours());
         
+        // Set manager if managerId is provided
+        if (branchDTO.getManagerId() != null) {
+            User manager = userRepository.findById(branchDTO.getManagerId())
+                    .orElseThrow(() -> new RuntimeException("Manager not found with id: " + branchDTO.getManagerId()));
+            branch.setManager(manager);
+        }
+        
         Branch savedBranch = branchRepository.save(branch);
         return new BranchDTO(savedBranch);
     }
@@ -55,6 +67,16 @@ public class BranchService {
                     branch.setMapLink(branchDTO.getMapLink());
                     branch.setOpenHours(branchDTO.getOpenHours());
                     branch.setCloseHours(branchDTO.getCloseHours());
+                    
+                    // Update manager if managerId is provided
+                    if (branchDTO.getManagerId() != null) {
+                        User manager = userRepository.findById(branchDTO.getManagerId())
+                                .orElseThrow(() -> new RuntimeException("Manager not found with id: " + branchDTO.getManagerId()));
+                        branch.setManager(manager);
+                    } else {
+                        // If managerId is null, remove the manager assignment
+                        branch.setManager(null);
+                    }
                     
                     Branch updatedBranch = branchRepository.save(branch);
                     return new BranchDTO(updatedBranch);
