@@ -28,7 +28,7 @@ public class EmailService {
             
             helper.setFrom("axlexpert.info@gmail.com");
             helper.setTo(toEmail);
-            helper.setSubject("🎉 Welcome to AxleXpert - Your Account is Ready!");
+            helper.setSubject("Welcome to AxleXpert - Account Created");
             
             String emailBody = createWelcomeEmailTemplate(toEmail, password, role, branchName);
             helper.setText(emailBody, true); // true = HTML content
@@ -54,104 +54,90 @@ public class EmailService {
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>Welcome to AxleXpert</title>
             </head>
-            <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7fa;">
+            <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; background-color: #f5f5f5;">
                 <table role="presentation" style="width: 100%%; border-collapse: collapse;">
                     <tr>
-                        <td align="center" style="padding: 40px 20px;">
-                            <table role="presentation" style="max-width: 600px; width: 100%%; border-collapse: collapse; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); overflow: hidden;">
+                        <td align="center" style="padding: 30px 20px;">
+                            <table role="presentation" style="max-width: 600px; width: 100%%; border-collapse: collapse; background-color: #ffffff; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
                                 
                                 <!-- Header -->
                                 <tr>
-                                    <td style="background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); padding: 40px 30px; text-align: center;">
-                                        <h1 style="margin: 0; color: #ffffff; font-size: 32px; font-weight: 700; letter-spacing: -0.5px;">
-                                            🚗 AxleXpert
+                                    <td style="background-color: #3498db; padding: 30px; text-align: center;">
+                                        <h1 style="margin: 0; color: #ffffff; font-size: 26px; font-weight: 600;">
+                                            AxleXpert
                                         </h1>
-                                        <p style="margin: 10px 0 0 0; color: #e0e7ff; font-size: 16px; font-weight: 400;">
-                                            Your Automotive Service Management Platform
+                                        <p style="margin: 8px 0 0 0; color: #ecf0f1; font-size: 14px;">
+                                            Automotive Service Management
                                         </p>
                                     </td>
                                 </tr>
                                 
-                                <!-- Welcome Message -->
+                                <!-- Content -->
                                 <tr>
-                                    <td style="padding: 40px 30px 30px 30px;">
-                                        <h2 style="margin: 0 0 20px 0; color: #1a202c; font-size: 24px; font-weight: 600;">
-                                            Welcome to AxleXpert!
+                                    <td style="padding: 35px 30px;">
+                                        <h2 style="margin: 0 0 20px 0; color: #2c3e50; font-size: 20px; font-weight: 600;">
+                                            Welcome to AxleXpert
                                         </h2>
-                                        <p style="margin: 0 0 20px 0; color: #4a5568; font-size: 16px; line-height: 1.6;">
-                                            We're thrilled to have you join the <strong>AxleXpert</strong> team! Your account has been successfully created as a <strong>%s</strong> at <strong>%s</strong> branch.
+                                        
+                                        <p style="margin: 0 0 15px 0; color: #555555; font-size: 15px; line-height: 1.6;">
+                                            Dear Employee,
                                         </p>
-                                    </td>
-                                </tr>
-                                
-                                <!-- Credentials Box -->
-                                <tr>
-                                    <td style="padding: 0 30px 30px 30px;">
-                                        <div style="background-color: #f7fafc; border-left: 4px solid #667eea; border-radius: 8px; padding: 25px;">
-                                            <h3 style="margin: 0 0 20px 0; color: #2d3748; font-size: 18px; font-weight: 600;">
-                                                Your Login Credentials
-                                            </h3>
-                                            <table style="width: 100%%; border-collapse: collapse;">
-                                                <tr>
-                                                    <td style="padding: 10px 0; color: #718096; font-size: 14px; font-weight: 600; width: 120px;">
-                                                        Email:
-                                                    </td>
-                                                    <td style="padding: 10px 0; color: #2d3748; font-size: 15px; font-weight: 500;">
-                                                        %s
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td style="padding: 10px 0; color: #718096; font-size: 14px; font-weight: 600;">
-                                                        Password:
-                                                    </td>
-                                                    <td style="padding: 10px 0;">
-                                                        <code style="background-color: #edf2f7; color: #e53e3e; padding: 8px 14px; border-radius: 4px; font-size: 16px; font-weight: 700; letter-spacing: 2px;">
-                                                            %s
-                                                        </code>
-                                                    </td>
-                                                </tr>
-                                            </table>
-                                        </div>
-                                    </td>
-                                </tr>
-                                
-                                <!-- Security Notice -->
-                                <tr>
-                                    <td style="padding: 0 30px 30px 30px;">
-                                        <div style="background-color: #fff5f5; border-left: 4px solid #f56565; border-radius: 8px; padding: 20px;">
-                                            <p style="margin: 0; color: #742a2a; font-size: 14px; line-height: 1.6;">
-                                                <strong>⚠️ Important Security Notice:</strong><br>
-                                                Please change your password immediately after your first login to ensure your account security. Keep your credentials confidential and never share them with anyone.
+                                        
+                                        <p style="margin: 0 0 20px 0; color: #555555; font-size: 15px; line-height: 1.6;">
+                                            Your account has been successfully created. You have been assigned as <strong>%s</strong> at the <strong>%s</strong> branch.
+                                        </p>
+                                        
+                                        <!-- Credentials -->
+                                        <table style="width: 100%%; border-collapse: collapse; margin: 25px 0; background-color: #f8f9fa; border-left: 3px solid #3498db;">
+                                            <tr>
+                                                <td style="padding: 20px;">
+                                                    <p style="margin: 0 0 15px 0; color: #2c3e50; font-size: 16px; font-weight: 600;">
+                                                        Login Credentials
+                                                    </p>
+                                                    <table style="width: 100%%; border-collapse: collapse;">
+                                                        <tr>
+                                                            <td style="padding: 8px 0; color: #7f8c8d; font-size: 14px; width: 100px;">
+                                                                Email:
+                                                            </td>
+                                                            <td style="padding: 8px 0; color: #2c3e50; font-size: 14px; font-weight: 500;">
+                                                                %s
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="padding: 8px 0; color: #7f8c8d; font-size: 14px;">
+                                                                Password:
+                                                            </td>
+                                                            <td style="padding: 8px 0;">
+                                                                <span style="background-color: #ecf0f1; color: #c0392b; padding: 6px 12px; border-radius: 3px; font-size: 15px; font-weight: 600; font-family: 'Courier New', monospace; letter-spacing: 1px;">%s</span>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        
+                                        <!-- Security Notice -->
+                                        <div style="background-color: #fff3cd; border-left: 3px solid #ffc107; padding: 15px; margin: 20px 0;">
+                                            <p style="margin: 0; color: #856404; font-size: 14px; line-height: 1.6;">
+                                                <strong>Important:</strong> Please change your password immediately after your first login for security purposes.
                                             </p>
                                         </div>
-                                    </td>
-                                </tr>
-                                
-                                <!-- Next Steps -->
-                                <tr>
-                                    <td style="padding: 0 30px 30px 30px;">
-                                        <h3 style="margin: 0 0 15px 0; color: #2d3748; font-size: 18px; font-weight: 600;">
-                                            Next Steps
-                                        </h3>
-                                        <ul style="margin: 0; padding-left: 20px; color: #4a5568; font-size: 15px; line-height: 1.8;">
-                                            <li>Login to your AxleXpert account using the credentials above</li>
-                                            <li>Update your password in settings for security</li>
-                                            <li>Complete your profile information</li>
-                                            <li>Explore the dashboard and available features</li>
-                                        </ul>
+                                        
+                                        <p style="margin: 20px 0 0 0; color: #555555; font-size: 14px; line-height: 1.6;">
+                                            If you have any questions or need assistance, please contact your system administrator.
+                                        </p>
                                     </td>
                                 </tr>
                                 
                                 <!-- Footer -->
                                 <tr>
-                                    <td style="background-color: #f7fafc; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0;">
-                                        <p style="margin: 0 0 10px 0; color: #4a5568; font-size: 15px; font-weight: 500;">
+                                    <td style="background-color: #f8f9fa; padding: 25px 30px; border-top: 1px solid #e0e0e0;">
+                                        <p style="margin: 0; color: #555555; font-size: 14px; text-align: center;">
                                             Best regards,<br>
-                                            <strong style="color: #667eea;">The AxleXpert Team</strong>
+                                            <strong style="color: #3498db;">AxleXpert Team</strong>
                                         </p>
-                                        <p style="margin: 15px 0 0 0; color: #a0aec0; font-size: 12px;">
-                                            This is an automated message. Please do not reply to this email.<br>
-                                            If you need assistance, contact your system administrator.
+                                        <p style="margin: 12px 0 0 0; color: #999999; font-size: 12px; text-align: center;">
+                                            This is an automated message. Please do not reply to this email.
                                         </p>
                                     </td>
                                 </tr>
