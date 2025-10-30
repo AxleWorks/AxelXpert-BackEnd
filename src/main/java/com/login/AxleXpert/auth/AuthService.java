@@ -17,11 +17,18 @@ import com.login.AxleXpert.Users.User;
 import com.login.AxleXpert.Users.UserRepository;
 import com.login.AxleXpert.security.JwtUtil;
 
+import jakarta.mail.internet.MimeMessage;
+
 @Service
 public class AuthService {
 
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
+
+    public AuthService(UserRepository userRepository, JwtUtil jwtUtil) {
+        this.userRepository = userRepository;
+        this.jwtUtil = jwtUtil;
+    }
 
     @Autowired(required = false)
     private JavaMailSender mailSender;
@@ -66,9 +73,7 @@ public class AuthService {
         
         user.setIs_Active(false);  // Require activation
         user.setIs_Blocked(false);
-        user.setRole("user");  // Default role
-
-        // Generate activation token
+        user.setRole("user");
         String token = generateToken32();
         user.setToken(token);
 

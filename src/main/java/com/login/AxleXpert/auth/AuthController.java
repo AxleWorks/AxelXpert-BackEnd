@@ -55,7 +55,7 @@ public class AuthController {
             case "BLOCKED":
                 return ResponseEntity.status(403).body("User is blocked");
             case "INACTIVE":
-                return ResponseEntity.status(403).body("Account not activated");
+                return ResponseEntity.status(403).body("Account not activated please check your email");
             default:
                 return ResponseEntity.status(500).body("Unknown error");
         }
