@@ -90,6 +90,12 @@ public class UserService {
         return userRepository.findByRoleIgnoreCaseAndBranch_IdWithBranch("employee", branchId).stream().map(this::toDto).toList();
     }
 
+    // Get all active users (employees, managers, users) from a specific branch who have logged in
+    @Transactional(readOnly = true)
+    public List<UserDTO> getActiveUsersByBranch(Long branchId) {
+        return userRepository.findActiveUsersByBranch(branchId).stream().map(this::toDto).toList();
+    }
+
     @Transactional
     public Optional<UserDTO> updateUser(Long id, UserDTO dto) {
         return userRepository.findById(id).map(user -> {
@@ -246,16 +252,37 @@ public class UserService {
         if (dto.getBranch() == null || dto.getBranch().trim().isEmpty()) {
             throw new IllegalArgumentException("Branch is required");
         }
+        if (dto.getManagerId() == null) {
+            throw new IllegalArgumentException("Manager ID is required");
+        }
+
+        // Verify that the manager exists and is actually a manager
+        User manager = userRepository.findByIdWithBranch(dto.getManagerId())
+            .orElseThrow(() -> new IllegalArgumentException("Manager not found"));
+        
+        if (!"MANAGER".equalsIgnoreCase(manager.getRole())) {
+            throw new IllegalArgumentException("Only managers can add employees");
+        }
+
+        // Verify manager has a branch
+        if (manager.getBranch() == null) {
+            throw new IllegalArgumentException("Manager is not assigned to any branch");
+        }
+
+        // Find branch by name
+        Branch branch = branchRepository.findByName(dto.getBranch())
+            .orElseThrow(() -> new IllegalArgumentException("Branch not found: " + dto.getBranch()));
+
+        // Ensure the manager can only add to their own branch
+        if (!manager.getBranch().getId().equals(branch.getId())) {
+            throw new IllegalArgumentException("Managers can only add employees to their own branch");
+        }
 
         // Check if email already exists
         Optional<User> existingUser = userRepository.findByEmail(dto.getEmail());
         if (existingUser.isPresent()) {
             throw new IllegalArgumentException("Email already exists");
         }
-
-        // Find branch by name
-        Branch branch = branchRepository.findByName(dto.getBranch())
-            .orElseThrow(() -> new IllegalArgumentException("Branch not found: " + dto.getBranch()));
 
         // Generate random 6-character password
         String randomPassword = emailService.generateRandomPassword();

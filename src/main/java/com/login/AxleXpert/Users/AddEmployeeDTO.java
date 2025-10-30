@@ -11,4 +11,5 @@ public class AddEmployeeDTO {
     private String email;
     private String role;
     private String branch;
+    private Long managerId; // ID of the manager adding the employee
 }

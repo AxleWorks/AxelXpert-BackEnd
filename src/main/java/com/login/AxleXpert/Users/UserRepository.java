@@ -26,4 +26,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // Fetch a single user along with its branch to avoid LazyInitializationException
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.branch b WHERE u.id = :id")
     Optional<User> findByIdWithBranch(@Param("id") Long id);
+
+    // Fetch all active users (employees, managers, users) from a specific branch who have logged in
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.branch b WHERE b.id = :branchId AND u.is_Active = true AND LOWER(u.role) IN ('employee', 'manager', 'user')")
+    List<User> findActiveUsersByBranch(@Param("branchId") Long branchId);
 }

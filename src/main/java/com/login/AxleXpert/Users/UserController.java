@@ -29,6 +29,10 @@ public class UserController {
             return ResponseEntity.badRequest().body("Email, role, and branch are required");
         }
         
+        if (dto.getManagerId() == null) {
+            return ResponseEntity.badRequest().body("Manager ID is required");
+        }
+        
         try {
             UserDTO created = userService.addEmployee(dto);
             return ResponseEntity.ok(created);
@@ -116,6 +120,12 @@ public class UserController {
     @GetMapping("/branch/{branchId}/employees")
     public ResponseEntity<List<UserDTO>> getEmployeesByBranch(@PathVariable Long branchId) {
         return ResponseEntity.ok(userService.getEmployeesByBranch(branchId));
+    }
+
+    // Get all active users (employees, managers, users) by branch id who have logged in
+    @GetMapping("/branch/{branchId}/active-users")
+    public ResponseEntity<List<UserDTO>> getActiveUsersByBranch(@PathVariable Long branchId) {
+        return ResponseEntity.ok(userService.getActiveUsersByBranch(branchId));
     }
 
     // Update profile image
