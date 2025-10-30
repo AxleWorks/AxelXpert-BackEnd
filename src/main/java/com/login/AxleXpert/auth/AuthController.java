@@ -72,13 +72,12 @@ public class AuthController {
         org.springframework.security.crypto.password.PasswordEncoder encoder = 
             new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
         
-        String dbHash = "$2a$10$xQj5Ci3KZV4TbSiCpAZjR.ywKz2sXRMfkHvLbYSZQcJGKxVyqvJDW";
-        boolean matches = encoder.matches(password, dbHash);
+        String hash = encoder.encode(password);
         
         return ResponseEntity.ok(
             "Password: " + password + "\n" +
-            "DB Hash: " + dbHash + "\n" +
-            "Matches: " + matches
+            "BCrypt Hash: " + hash + "\n" +
+            "SQL: UPDATE user SET password = '" + hash + "' WHERE password = '" + password + "';"
         );
     }
 

@@ -17,18 +17,11 @@ import com.login.AxleXpert.Users.User;
 import com.login.AxleXpert.Users.UserRepository;
 import com.login.AxleXpert.security.JwtUtil;
 
-import jakarta.mail.internet.MimeMessage;
-
 @Service
 public class AuthService {
 
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
-
-    public AuthService(UserRepository userRepository, JwtUtil jwtUtil) {
-        this.userRepository = userRepository;
-        this.jwtUtil = jwtUtil;
-    }
 
     @Autowired(required = false)
     private JavaMailSender mailSender;
