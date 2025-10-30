@@ -44,9 +44,9 @@ public class AuthController {
         switch (result) {
             case "OK":
                 // Build response with id, username, email and role (don't include password)
-                com.login.AxleXpert.Users.User u = userService.getUserByEmail(dto.getEmail());
+                UserDTO_Auth u = userService.getUserByEmail(dto.getEmail());
                 if (u == null) return ResponseEntity.status(500).body("Unexpected error: user not found");
-                LoginResponse resp = new LoginResponse(u.getId(), u.getUsername(), u.getEmail(), u.getRole());
+                LoginResponse resp = new LoginResponse(u.getId(), u.getUsername(), u.getEmail(), u.getRole(),u.getJWTToken());
                 return ResponseEntity.ok(resp);
             case "NOT_FOUND":
                 return ResponseEntity.status(404).body("User not found");

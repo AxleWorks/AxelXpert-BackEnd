@@ -3,6 +3,7 @@ package com.login.AxleXpert.auth;
 import java.security.SecureRandom;
 import java.util.Base64;
 
+import com.login.AxleXpert.security.JwtUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,8 +22,13 @@ import jakarta.mail.internet.MimeMessage;
 @Service
 public class AuthService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
+
+    public AuthService(UserRepository userRepository, JwtUtil jwtUtil) {
+        this.userRepository = userRepository;
+        this.jwtUtil = jwtUtil;
+    }
 
     @Autowired(required = false)
     private JavaMailSender mailSender;
@@ -168,7 +174,7 @@ public class AuthService {
             if (Boolean.TRUE.equals(user.getIs_Blocked())) return "BLOCKED";
             if (Boolean.FALSE.equals(user.getIs_Active())) return "INACTIVE";
             if (!user.getPassword().equals(password)) return "INVALID";
-            return "OK";
+            return  "OK";
         }).orElse("NOT_FOUND");
     }
     
@@ -177,7 +183,21 @@ public class AuthService {
         return userRepository.findByUsername(username).orElse(null);
     }
 
-    public User getUserByEmail(String email) {
-        return userRepository.findByEmail(email).orElse(null);
+    public UserDTO_Auth getUserByEmail(String email) {
+          User user = userRepository.findByEmail(email).orElse(null);
+        String token = jwtUtil.generateToken(user.getUsername());
+        System.out.println(token);
+        return new UserDTO_Auth(
+                user.getId(),
+                user.getUsername(),
+                user.getRole(),
+                user.getEmail(),
+                user.getIs_Blocked(),
+                user.getIs_Active(),
+                token
+
+
+        );
+
     }
 }
