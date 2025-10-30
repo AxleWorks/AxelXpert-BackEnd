@@ -1,4 +1,4 @@
-package com.login.AxleXpert.Security;
+package com.login.AxleXpert.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

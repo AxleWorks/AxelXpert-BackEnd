@@ -13,9 +13,9 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.login.AxleXpert.Security.JwtUtil;
 import com.login.AxleXpert.Users.User;
 import com.login.AxleXpert.Users.UserRepository;
+import com.login.AxleXpert.security.JwtUtil;
 
 @Service
 public class AuthService {

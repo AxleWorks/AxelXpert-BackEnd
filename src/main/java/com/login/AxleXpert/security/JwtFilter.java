@@ -1,4 +1,4 @@
-package com.login.AxleXpert.Security;
+package com.login.AxleXpert.security;
 
 import java.io.IOException;
 import java.util.Collections;

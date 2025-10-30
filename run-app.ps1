@@ -4,6 +4,22 @@
 Write-Host "=== AxleXpert Backend Startup ===" -ForegroundColor Cyan
 Write-Host ""
 
+# Load .env file if exists
+if (Test-Path .env) {
+    Write-Host "Loading environment variables from .env file..." -ForegroundColor Green
+    Get-Content .env | ForEach-Object {
+        if ($_ -match '^\s*([^#][^=]+)=(.*)$') {
+            $name = $matches[1].Trim()
+            $value = $matches[2].Trim()
+            [Environment]::SetEnvironmentVariable($name, $value, "Process")
+        }
+    }
+    Write-Host ""
+} else {
+    Write-Host "WARNING: .env file not found" -ForegroundColor Yellow
+    Write-Host ""
+}
+
 # Check if required environment variables are set
 $missingVars = @()
 
