@@ -12,11 +12,13 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.login.AxleXpert.Users.entity.User;
 import com.login.AxleXpert.Users.repository.UserRepository;
 import com.login.AxleXpert.auth.dto.UserDTO_Auth;
 import com.login.AxleXpert.security.JwtUtil;
+import com.login.AxleXpert.common.EmailService;
 
 @Service
 public class AuthService {
@@ -36,8 +38,14 @@ public class AuthService {
     @Value("${spring.mail.username:}")
     private String fromEmail;
 
+    @Value("${frontend.url:http://localhost:5173}")
+    private String frontendUrl;
+
     private final Logger log = LoggerFactory.getLogger(AuthService.class);
     private static final SecureRandom secureRandom = new SecureRandom();
+
+    @Autowired
+    private EmailService emailService;
 
     public AuthService(UserRepository userRepository, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
@@ -159,7 +167,7 @@ public class AuthService {
     /**
      * Get user details after successful login
      */
-    public com.login.AxleXpert.auth.dto.UserDTO_Auth getUserByEmail(String emailOrUsername) {
+    public UserDTO_Auth getUserByEmail(String emailOrUsername) {
         Optional<User> userOpt = userRepository.findByEmail(emailOrUsername);
         
         if (userOpt.isEmpty()) {
@@ -274,5 +282,103 @@ public class AuthService {
         }
         
         return activationLink;
+    }
+
+    /**
+     * Initiate password reset process by sending email with JWT reset link
+     * NO DATABASE TABLE NEEDED - uses JWT for stateless token management
+     */
+    @Transactional
+    public String initiatePasswordReset(String email) {
+        // Find user by email
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        
+        // Generate JWT token for password reset using the user object
+        String resetToken = jwtUtil.generateToken(user);
+        
+        // Create reset link
+        String resetLink = frontendUrl + "/reset-password?token=" + resetToken;
+        
+        // Send email
+        String subject = "Password Reset Request - AxleXpert";
+        String body = buildPasswordResetEmail(user.getUsername(), resetLink);
+        
+        emailService.sendEmail(user.getEmail(), subject, body);
+        
+        log.info("Password reset email sent to: {}", email);
+        return "Password reset email sent successfully";
+    }
+
+    /**
+     * Reset password using JWT token
+     * Validates JWT token and updates password
+     */
+    @Transactional
+    public String resetPassword(String token, String newPassword) {
+        try {
+            // Extract email from token first
+            String email = jwtUtil.extractEmail(token);
+            
+            // Find user
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            // Validate JWT token with username
+            if (!jwtUtil.validateToken(token, user.getUsername())) {
+                throw new RuntimeException("Invalid or expired reset token");
+            }
+            
+            // Update password
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(user);
+            
+            log.info("Password reset successfully for user: {}", email);
+            return "Password reset successfully";
+            
+        } catch (Exception e) {
+            log.error("Password reset failed: {}", e.getMessage());
+            throw new RuntimeException("Failed to reset password: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Build HTML email template for password reset
+     */
+    private String buildPasswordResetEmail(String username, String resetLink) {
+        return "<!DOCTYPE html>" +
+                "<html>" +
+                "<head>" +
+                "<style>" +
+                "body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }" +
+                ".container { max-width: 600px; margin: 0 auto; padding: 20px; }" +
+                ".header { background-color: #4CAF50; color: white; padding: 20px; text-align: center; }" +
+                ".content { background-color: #f9f9f9; padding: 20px; }" +
+                ".button { display: inline-block; padding: 12px 30px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }" +
+                ".footer { text-align: center; padding: 20px; color: #777; font-size: 12px; }" +
+                "</style>" +
+                "</head>" +
+                "<body>" +
+                "<div class='container'>" +
+                "<div class='header'>" +
+                "<h1>AxleXpert</h1>" +
+                "</div>" +
+                "<div class='content'>" +
+                "<h2>Password Reset Request</h2>" +
+                "<p>Hello " + username + ",</p>" +
+                "<p>We received a request to reset your password. Click the button below to reset your password:</p>" +
+                "<p style='text-align: center;'>" +
+                "<a href='" + resetLink + "' class='button'>Reset Password</a>" +
+                "</p>" +
+                "<p>This link will expire in 1 hour.</p>" +
+                "<p>If you didn't request a password reset, please ignore this email.</p>" +
+                "<p>For security reasons, this link can only be used once.</p>" +
+                "</div>" +
+                "<div class='footer'>" +
+                "<p>&copy; 2025 AxleXpert. All rights reserved.</p>" +
+                "</div>" +
+                "</div>" +
+                "</body>" +
+                "</html>";
     }
 }
