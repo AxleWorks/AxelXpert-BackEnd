@@ -1,12 +1,12 @@
 package com.login.AxleXpert.Users.service;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,17 +31,20 @@ public class UserService {
     private final BookingRepository bookingRepository;
     private final TaskRepository taskRepository;
     private final EmailService emailService;
+    private final PasswordEncoder passwordEncoder;
 
     public UserService(UserRepository userRepository, 
                       BranchRepository branchRepository,
                       BookingRepository bookingRepository,
                       TaskRepository taskRepository,
-                      EmailService emailService) {
+                      EmailService emailService,
+                      PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.branchRepository = branchRepository;
         this.bookingRepository = bookingRepository;
         this.taskRepository = taskRepository;
         this.emailService = emailService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     private UserDTO toDto(User user) {
@@ -143,13 +146,15 @@ public class UserService {
             return false;
         }
         return userRepository.findById(id).map(user -> {
-            if (!Objects.equals(user.getPassword(), dto.getCurrentPassword())) {
+            // Use password encoder to verify current password
+            if (!passwordEncoder.matches(dto.getCurrentPassword(), user.getPassword())) {
                 return false;
             }
             if (dto.getNewPassword().length() < 6) {
                 return false;
             }
-            user.setPassword(dto.getNewPassword());
+            // Encode new password before saving
+            user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
             userRepository.save(user);
             return true;
         }).orElse(false);
@@ -248,7 +253,8 @@ public class UserService {
         newUser.setRole(dto.getRole().toUpperCase());
         newUser.setBranch(branch);
         newUser.setToken(UUID.randomUUID().toString());
-        newUser.setPassword(randomPassword);
+        // Encode the password before saving
+        newUser.setPassword(passwordEncoder.encode(randomPassword));
         newUser.setIs_Active(true);
         newUser.setIs_Blocked(false);
 
