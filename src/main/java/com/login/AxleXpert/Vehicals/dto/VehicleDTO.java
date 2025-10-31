@@ -1,8 +1,9 @@
-package com.login.AxleXpert.Vehicals.dto.;
+package com.login.AxleXpert.Vehicals.dto;
 
 import java.time.LocalDate;
 
 import com.login.AxleXpert.Vehicals.entity.Vehicle;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
