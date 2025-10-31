@@ -1,6 +1,5 @@
 package com.login.AxleXpert.Tasks.controller;
 
-import java.lang.management.ManagementFactory;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,7 +10,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -30,15 +28,12 @@ import com.login.AxleXpert.Tasks.dto.UpdateTaskDTO;
 import com.login.AxleXpert.Tasks.service.TaskService;
 import com.login.AxleXpert.common.dto.ErrorResponse;
 import com.login.AxleXpert.common.enums.NoteType;
-import com.login.AxleXpert.common.enums.TaskStatus;
 
 @RestController
 @RequestMapping("/api/tasks")
 public class TaskController {
 
     private final TaskService taskService;
-
-    private ManagementFactory managementFactory;
 
     public TaskController(TaskService taskService) {
         this.taskService = taskService;

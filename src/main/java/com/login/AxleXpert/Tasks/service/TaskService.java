@@ -7,10 +7,10 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.login.AxleXpert.Users.User;
-import com.login.AxleXpert.Users.UserRepository;
-import com.login.AxleXpert.bookings.Booking;
-import com.login.AxleXpert.bookings.BookingRepository;
+import com.login.AxleXpert.Users.entity.User;
+import com.login.AxleXpert.Users.repository.UserRepository;
+import com.login.AxleXpert.bookings.entity.Booking;
+import com.login.AxleXpert.bookings.repository.BookingRepository;
 import com.login.AxleXpert.Tasks.dto.CreateSubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.CreateTaskNoteDTO;
 import com.login.AxleXpert.Tasks.dto.EmployeeTaskDTO;

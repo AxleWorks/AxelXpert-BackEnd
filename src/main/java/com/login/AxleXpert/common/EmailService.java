@@ -1,5 +1,7 @@
 package com.login.AxleXpert.common;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -7,6 +9,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailService {
     
+    private static final Logger log = LoggerFactory.getLogger(EmailService.class);
     private final JavaMailSender mailSender;
 
     public EmailService(JavaMailSender mailSender) {
@@ -16,11 +19,7 @@ public class EmailService {
     //Send welcome email with login credentials to new employee
     public void sendWelcomeEmail(String toEmail, String password, String role, String branchName) {
         try {
-            System.out.println("=== PREPARING EMAIL ===");
-            System.out.println("To: " + toEmail);
-            System.out.println("Password: " + password);
-            System.out.println("Role: " + role);
-            System.out.println("Branch: " + branchName);
+            log.info("Sending welcome email to: {}", toEmail);
             
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom("axlexpert.info@gmail.com");
@@ -43,14 +42,11 @@ public class EmailService {
             
             message.setText(emailBody);
             
-            System.out.println("Sending email via JavaMailSender...");
             mailSender.send(message);
-            System.out.println("✓ Welcome email sent successfully to: " + toEmail);
+            log.info("Welcome email sent successfully to: {}", toEmail);
             
         } catch (Exception e) {
-            System.err.println("✗ Failed to send email to " + toEmail);
-            System.err.println("Error details: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Failed to send welcome email to {}: {}", toEmail, e.getMessage(), e);
             throw new RuntimeException("Failed to send welcome email: " + e.getMessage(), e);
         }
     }
