@@ -1,6 +1,6 @@
 package com.login.AxleXpert.auth;
 
-import com.login.AxleXpert.Users.User;
+import com.login.AxleXpert.Users.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
