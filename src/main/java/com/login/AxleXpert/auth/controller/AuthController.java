@@ -1,11 +1,11 @@
 package com.login.AxleXpert.auth.controller;
 
 import com.login.AxleXpert.auth.LoginResponse;
-import com.login.AxleXpert.auth.DTO.LoginDTO;
-import com.login.AxleXpert.auth.DTO.SignupDTO;
-import com.login.AxleXpert.auth.DTO.UserDTO_Auth;
-import com.login.AxleXpert.auth.DTO.PasswordResetConfirmDTO;
-import com.login.AxleXpert.auth.DTO.PasswordResetRequestDTO;
+import com.login.AxleXpert.auth.dto.LoginDTO;
+import com.login.AxleXpert.auth.dto.SignupDTO;
+import com.login.AxleXpert.auth.dto.UserDTO_Auth;
+import com.login.AxleXpert.auth.dto.PasswordResetConfirmDTO;
+import com.login.AxleXpert.auth.dto.PasswordResetRequestDTO;
 import com.login.AxleXpert.auth.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
