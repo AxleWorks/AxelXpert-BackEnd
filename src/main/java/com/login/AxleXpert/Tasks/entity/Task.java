@@ -4,8 +4,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.login.AxleXpert.Users.entity.User;
-import com.login.AxleXpert.bookings.entity.Booking;
+import com.login.AxleXpert.Users.User;
+import com.login.AxleXpert.bookings.Booking;
 import com.login.AxleXpert.common.enums.TaskStatus;
 
 import jakarta.persistence.CascadeType;

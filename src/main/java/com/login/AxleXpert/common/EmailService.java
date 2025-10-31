@@ -46,7 +46,11 @@ public class EmailService {
      */
     public void sendWelcomeEmail(String toEmail, String password, String role, String branchName) {
         try {
-            log.info("Sending welcome email to: {}", toEmail);
+            System.out.println("=== PREPARING EMAIL ===");
+            System.out.println("To: " + toEmail);
+            System.out.println("Password: " + password);
+            System.out.println("Role: " + role);
+            System.out.println("Branch: " + branchName);
             
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom("axlexpert.info@gmail.com");
@@ -69,11 +73,14 @@ public class EmailService {
             
             message.setText(emailBody);
             
+            System.out.println("Sending email via JavaMailSender...");
             mailSender.send(message);
-            log.info("Welcome email sent successfully to: {}", toEmail);
+            System.out.println("✓ Welcome email sent successfully to: " + toEmail);
             
         } catch (Exception e) {
-            log.error("Failed to send welcome email to {}: {}", toEmail, e.getMessage(), e);
+            System.err.println("✗ Failed to send email to " + toEmail);
+            System.err.println("Error details: " + e.getMessage());
+            e.printStackTrace();
             throw new RuntimeException("Failed to send welcome email: " + e.getMessage(), e);
         }
     }

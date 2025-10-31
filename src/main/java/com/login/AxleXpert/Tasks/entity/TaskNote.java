@@ -2,7 +2,7 @@ package com.login.AxleXpert.Tasks.entity;
 
 import java.time.LocalDateTime;
 
-import com.login.AxleXpert.Users.entity.User;
+import com.login.AxleXpert.Users.User;
 import com.login.AxleXpert.common.enums.NoteType;
 
 import jakarta.persistence.Column;
