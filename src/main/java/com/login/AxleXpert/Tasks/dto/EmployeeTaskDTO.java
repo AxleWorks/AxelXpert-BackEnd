@@ -15,8 +15,6 @@ public record EmployeeTaskDTO(
     String description,
     TaskStatus status,
     List<SubTaskDTO> subTasks,
-    LocalDateTime startTime,
-    LocalDateTime completedTime,
-    LocalDateTime createdAt,
-    LocalDateTime updatedAt
+    LocalDateTime sheduledTime
+
 ) {} 
