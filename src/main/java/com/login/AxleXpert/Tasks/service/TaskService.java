@@ -141,7 +141,7 @@ public class TaskService {
             task.setStatus(updateTaskDTO.status());
         }
         if (updateTaskDTO.startTime() != null) {
-            task.setStartTime(updateTaskDTO.startTime());
+            task.setSheduledTime(updateTaskDTO.startTime());
         }
         if (updateTaskDTO.completedTime() != null) {
             task.setCompletedTime(updateTaskDTO.completedTime());
@@ -337,10 +337,7 @@ public class TaskService {
                 task.getSubTasks().stream()
                         .map(this::toSubTaskDTO)
                         .collect(Collectors.toList()),
-                task.getStartTime(),
-                task.getCompletedTime(),
-                task.getCreatedAt(),
-                task.getUpdatedAt()
+                task.getSheduledTime()
         );
     }
 
