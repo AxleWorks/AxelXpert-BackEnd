@@ -1,4 +1,4 @@
-package com.login.AxleXpert.auth;
+package com.login.AxleXpert.auth.DTO;
 
 import org.springframework.stereotype.Component;
 

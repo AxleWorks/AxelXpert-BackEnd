@@ -1,4 +1,4 @@
-package com.login.AxleXpert.auth;
+package com.login.AxleXpert.auth.DTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
