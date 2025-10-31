@@ -41,6 +41,8 @@ public class UserController {
             return ResponseEntity.ok(created);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
         } catch (RuntimeException e) {
             if (e.getMessage() != null && e.getMessage().contains("Failed to send welcome email")) {
                 return ResponseEntity.status(500).body("User created but email failed: " + e.getMessage());
@@ -72,17 +74,25 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
-        return userService.getUserById(id)
-            .map(ResponseEntity::ok)
-            .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<?> getUserById(@PathVariable Long id) {
+        try {
+            return userService.getUserById(id)
+                .map(user -> ResponseEntity.ok((Object) user))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @RequestBody UserDTO userDto) {
-        return userService.updateUser(id, userDto)
-            .map(ResponseEntity::ok)
-            .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UserDTO userDto) {
+        try {
+            return userService.updateUser(id, userDto)
+                .map(user -> ResponseEntity.ok((Object) user))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        }
     }
 
     @PutMapping("/{id}/username")
@@ -93,10 +103,12 @@ public class UserController {
         
         try {
             return userService.updateUsername(id, dto.getUsername())
-                .map(user -> ResponseEntity.ok(user))
+                .map(user -> ResponseEntity.ok((Object) user))
                 .orElseGet(() -> ResponseEntity.notFound().build());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
         }
     }
 
@@ -117,17 +129,25 @@ public class UserController {
     }
 
     @PutMapping("/{id}/profile-image")
-    public ResponseEntity<UserDTO> updateProfileImage(@PathVariable Long id, @RequestBody ProfileImageUpdateDTO dto) {
-        return userService.updateProfileImage(id, dto)
-            .map(ResponseEntity::ok)
-            .orElseGet(() -> ResponseEntity.badRequest().build());
+    public ResponseEntity<?> updateProfileImage(@PathVariable Long id, @RequestBody ProfileImageUpdateDTO dto) {
+        try {
+            return userService.updateProfileImage(id, dto)
+                .map(user -> ResponseEntity.ok((Object) user))
+                .orElseGet(() -> ResponseEntity.badRequest().build());
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}/profile-image")
-    public ResponseEntity<UserDTO> deleteProfileImage(@PathVariable Long id) {
-        return userService.deleteProfileImage(id)
-            .map(ResponseEntity::ok)
-            .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<?> deleteProfileImage(@PathVariable Long id) {
+        try {
+            return userService.deleteProfileImage(id)
+                .map(user -> ResponseEntity.ok((Object) user))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        }
     }
 
     @PutMapping("/{id}/block")
@@ -144,6 +164,8 @@ public class UserController {
                 return ResponseEntity.status(409)
                     .body("Cannot block user: User has active bookings or tasks");
             }
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
@@ -159,6 +181,8 @@ public class UserController {
                 return ResponseEntity.status(409)
                     .body("Cannot delete user: User has active bookings or tasks");
             }
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
