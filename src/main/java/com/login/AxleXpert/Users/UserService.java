@@ -5,6 +5,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +18,8 @@ import com.login.AxleXpert.common.EmailService;
 
 @Service
 public class UserService {
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
+    
     private final UserRepository userRepository;
     private final BranchRepository branchRepository;
     private final BookingRepository bookingRepository;
@@ -282,23 +286,17 @@ public class UserService {
         
         // Send welcome email with credentials
         try {
-            System.out.println("Attempting to send email to: " + saved.getEmail());
+            log.info("Sending welcome email to new employee: {}", saved.getEmail());
             emailService.sendWelcomeEmail(
                 saved.getEmail(),
                 randomPassword,
                 saved.getRole(),
                 branch.getName()
             );
-            System.out.println("Email sent successfully!");
+            log.info("Welcome email sent successfully to: {}", saved.getEmail());
         } catch (Exception e) {
-            // Log detailed error information
-            System.err.println("=== EMAIL SENDING FAILED ===");
-            System.err.println("Error message: " + e.getMessage());
-            System.err.println("Error type: " + e.getClass().getName());
-            e.printStackTrace();
-            System.err.println("===========================");
+            log.error("Failed to send welcome email to {}: {}", saved.getEmail(), e.getMessage(), e);
             // If email fails, still return the created user but log the error
-            System.err.println("User created but email failed: " + e.getMessage());
         }
 
         return toDto(saved);

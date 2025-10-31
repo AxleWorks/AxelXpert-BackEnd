@@ -66,31 +66,4 @@ public class AuthController {
         return ResponseEntity.ok("Authentication service is running");
     }
 
-    // TEMPORARY DEBUG ENDPOINT - Remove after testing
-    @GetMapping("/debug-password")
-    public ResponseEntity<?> debugPassword(@RequestParam String password) {
-        org.springframework.security.crypto.password.PasswordEncoder encoder = 
-            new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
-        
-        String hash = encoder.encode(password);
-        
-        return ResponseEntity.ok(
-            "Password: " + password + "\n" +
-            "BCrypt Hash: " + hash + "\n" +
-            "SQL: UPDATE user SET password = '" + hash + "' WHERE password = '" + password + "';"
-        );
-    }
-
-    // Simple endpoint to test SMTP connectivity from the running app. Call with ?to=you@example.com
-    @GetMapping("/test-email")
-    public ResponseEntity<?> testEmail(@RequestParam(required = false) String to) {
-        String email = (to == null || to.isBlank()) ? "test@example.com" : to;
-        try {
-            String res = userService.sendTestEmail(email);
-            return ResponseEntity.ok(res);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(500).body(e.getMessage());
-        }
-    }
-
 }
