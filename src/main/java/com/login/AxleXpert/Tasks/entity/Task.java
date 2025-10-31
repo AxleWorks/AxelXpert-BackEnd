@@ -72,6 +72,9 @@ public class Task {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "sheduled_time")
+    private LocalDateTime sheduledTime;
+
     @Column(name = "start_time")
     private LocalDateTime startTime;
 
