@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.login.AxleXpert.Users.User;
 import com.login.AxleXpert.Users.UserRepository;
-import com.login.AxleXpert.auth.DTO.UserDTO_Auth;
+import com.login.AxleXpert.auth.dto.UserDTO_Auth;
 import com.login.AxleXpert.security.JwtUtil;
 import com.login.AxleXpert.common.EmailService;
 
