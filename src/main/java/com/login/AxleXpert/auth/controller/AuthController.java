@@ -1,7 +1,7 @@
 package com.login.AxleXpert.auth.controller;
 
+import com.login.AxleXpert.auth.LoginResponse;
 import com.login.AxleXpert.auth.dto.LoginDTO;
-import com.login.AxleXpert.auth.dto.LoginResponse;
 import com.login.AxleXpert.auth.dto.SignupDTO;
 import com.login.AxleXpert.auth.dto.UserDTO_Auth;
 import com.login.AxleXpert.auth.service.AuthService;
