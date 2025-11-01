@@ -102,13 +102,23 @@ public class UserService {
 
     /**
      * Validate that the current user (if manager) can access the given user
+     * - Admins can access all users
+     * - Managers can access all customers (users) in any branch
+     * - Managers can only access employees in their own branch
      */
     private boolean canAccessUser(User user) {
         if (isCurrentUserAdmin()) {
             return true; // Admins can access all users
         }
         if (isCurrentUserManager()) {
-            return isSameBranchAsCurrentUser(user); // Managers can only access users in their branch
+            // Managers can access all customers (users with role "user")
+            if ("user".equalsIgnoreCase(user.getRole())) {
+                return true;
+            }
+            // Managers can only access employees in their branch
+            if ("employee".equalsIgnoreCase(user.getRole()) || "manager".equalsIgnoreCase(user.getRole())) {
+                return isSameBranchAsCurrentUser(user);
+            }
         }
         return true; // Other roles can access (will be controlled by endpoint security)
     }
@@ -141,16 +151,24 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public List<UserDTO> getUsersByRole(String role) {
-        // If current user is a manager, filter by their branch
-        if (isCurrentUserManager()) {
-            return getCurrentUserBranchId()
-                .map(branchId -> userRepository.findByRoleIgnoreCaseAndBranch_IdWithBranch(role, branchId))
-                .orElse(List.of())
-                .stream()
-                .map(this::toDto)
-                .toList();
+        // For "user" role (customers): both admin and manager can see all users in any branch
+        if ("user".equalsIgnoreCase(role)) {
+            return userRepository.findByRoleIgnoreCaseWithBranch(role).stream().map(this::toDto).toList();
         }
-        // Admins and others can see all users with the specified role
+        
+        // For "employee" role: managers can only see employees in their branch, admins can see all
+        if ("employee".equalsIgnoreCase(role)) {
+            if (isCurrentUserManager()) {
+                return getCurrentUserBranchId()
+                    .map(branchId -> userRepository.findByRoleIgnoreCaseAndBranch_IdWithBranch(role, branchId))
+                    .orElse(List.of())
+                    .stream()
+                    .map(this::toDto)
+                    .toList();
+            }
+        }
+        
+        // For other roles or if admin: return all users with the specified role
         return userRepository.findByRoleIgnoreCaseWithBranch(role).stream().map(this::toDto).toList();
     }
 
