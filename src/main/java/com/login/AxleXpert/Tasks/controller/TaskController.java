@@ -173,7 +173,7 @@ public class TaskController {
                                         @RequestBody CreateTaskImageDTO createTaskImageDTO) {
         try {
             TaskImageDTO image = taskService.addTaskImage(taskId, 
-                    createTaskImageDTO.imageUrl(), createTaskImageDTO.description());
+                    createTaskImageDTO.imageUrl(), createTaskImageDTO.description(), createTaskImageDTO.publicId());
             return ResponseEntity.status(HttpStatus.CREATED).body(image);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
