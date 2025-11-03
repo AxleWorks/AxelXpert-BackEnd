@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -19,6 +20,7 @@ import com.login.AxleXpert.Tasks.dto.CreateSubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.CreateTaskImageDTO;
 import com.login.AxleXpert.Tasks.dto.CreateTaskNoteDTO;
 import com.login.AxleXpert.Tasks.dto.EmployeeTaskDTO;
+import com.login.AxleXpert.Tasks.dto.ProgressTrackingDTO;
 import com.login.AxleXpert.Tasks.dto.SubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.TaskDTO;
 import com.login.AxleXpert.Tasks.dto.TaskImageDTO;
@@ -29,6 +31,7 @@ import com.login.AxleXpert.Tasks.service.TaskService;
 import com.login.AxleXpert.common.dto.ErrorResponse;
 import com.login.AxleXpert.common.enums.NoteType;
 
+@CrossOrigin(origins = "http://localhost:5173") 
 @RestController
 @RequestMapping("/api/tasks")
 public class TaskController {
@@ -49,6 +52,13 @@ public class TaskController {
     @GetMapping("/customer/{customerId}")
     public ResponseEntity<List<TaskDTO>> getTasksByCustomer(@PathVariable Long customerId) {
         List<TaskDTO> tasks = taskService.getTasksByCustomer(customerId);
+        return ResponseEntity.ok(tasks);
+    }
+
+    //New endpoint for Customer Progress Tracking Feature
+    @GetMapping("/customer/{customerId}/progress-tracking")
+    public ResponseEntity<List<ProgressTrackingDTO>> getCustomerProgressTracking(@PathVariable Long customerId) {
+        List<ProgressTrackingDTO> tasks = taskService.getTasksForCustomerProgressTracking(customerId);
         return ResponseEntity.ok(tasks);
     }
 
