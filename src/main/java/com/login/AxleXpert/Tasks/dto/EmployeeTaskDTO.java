@@ -15,6 +15,8 @@ public record EmployeeTaskDTO(
     String description,
     TaskStatus status,
     List<SubTaskDTO> subTasks,
+    List<TaskNoteDTO> taskNotes,
+    List<TaskImageDTO> taskImages,
     LocalDateTime sheduledTime
 
 ) {} 

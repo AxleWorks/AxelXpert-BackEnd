@@ -156,6 +156,17 @@ public class TaskController {
         return ResponseEntity.ok(notes);
     }
 
+    @DeleteMapping("{taskId}/notes/{noteId}")
+    public ResponseEntity<?> deleteTaskNote(@PathVariable Long noteId) {
+        try {
+            taskService.deleteTaskNote(noteId);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ErrorResponse(e.getMessage()));
+        }
+    }
+
     // Task Image endpoints
     @PostMapping("/{taskId}/images")
     public ResponseEntity<?> addTaskImage(@PathVariable Long taskId,
@@ -176,7 +187,7 @@ public class TaskController {
         return ResponseEntity.ok(images);
     }
 
-    @DeleteMapping("/images/{imageId}")
+    @DeleteMapping("{taskId}/images/{imageId}")
     public ResponseEntity<?> deleteTaskImage(@PathVariable Long imageId) {
         try {
             taskService.deleteTaskImage(imageId);
