@@ -7,10 +7,12 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.login.AxleXpert.Users.User;
-import com.login.AxleXpert.Users.UserRepository;
-import com.login.AxleXpert.bookings.Booking;
-import com.login.AxleXpert.bookings.BookingRepository;
+import com.login.AxleXpert.Services.entity.ServiceSubTask;
+import com.login.AxleXpert.Services.repository.ServiceSubTaskRepository;
+import com.login.AxleXpert.Users.entity.User;
+import com.login.AxleXpert.Users.repository.UserRepository;
+import com.login.AxleXpert.bookings.entity.Booking;
+import com.login.AxleXpert.bookings.repository.BookingRepository;
 import com.login.AxleXpert.Tasks.dto.CreateSubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.CreateTaskNoteDTO;
 import com.login.AxleXpert.Tasks.dto.EmployeeTaskDTO;
@@ -41,23 +43,27 @@ public class TaskService {
     private final TaskImageRepository taskImageRepository;
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
+    private final ServiceSubTaskRepository serviceSubTaskRepository;
 
     public TaskService(TaskRepository taskRepository, 
                       SubTaskRepository subTaskRepository,
                       TaskNoteRepository taskNoteRepository, 
                       TaskImageRepository taskImageRepository,
                       BookingRepository bookingRepository, 
-                      UserRepository userRepository) {
+                      UserRepository userRepository,
+                      ServiceSubTaskRepository serviceSubTaskRepository) {
         this.taskRepository = taskRepository;
         this.subTaskRepository = subTaskRepository;
         this.taskNoteRepository = taskNoteRepository;
         this.taskImageRepository = taskImageRepository;
         this.bookingRepository = bookingRepository;
         this.userRepository = userRepository;
+        this.serviceSubTaskRepository = serviceSubTaskRepository;
     }
 
     /**
      * Creates a task automatically when an employee is assigned to a booking
+     * and auto-generates subtasks based on the service's predefined subtasks
      */
     public TaskDTO createTaskForBooking(Long bookingId, Long employeeId) {
         Optional<Booking> bookingOpt = bookingRepository.findById(bookingId);
@@ -92,7 +98,26 @@ public class TaskService {
         task.setStatus(TaskStatus.NOT_STARTED);
 
         Task savedTask = taskRepository.save(task);
-        return toTaskDTO(savedTask);
+
+        // Auto-create subtasks from service template
+        List<ServiceSubTask> serviceSubTasks = serviceSubTaskRepository
+                .findByServiceIdOrderByOrderIndexAsc(booking.getService().getId());
+        
+        for (ServiceSubTask serviceSubTask : serviceSubTasks) {
+            SubTask subTask = new SubTask();
+            subTask.setTask(savedTask);
+            subTask.setTitle(serviceSubTask.getTitle());
+            subTask.setDescription(serviceSubTask.getDescription());
+            subTask.setOrderIndex(serviceSubTask.getOrderIndex());
+            subTask.setStatus(TaskStatus.NOT_STARTED);
+            subTask.setNotes(""); // Empty notes initially
+            
+            subTaskRepository.save(subTask);
+        }
+
+        // Reload task with subtasks
+        Task taskWithSubTasks = taskRepository.findById(savedTask.getId()).orElse(savedTask);
+        return toTaskDTO(taskWithSubTasks);
     }
 
     @Transactional(readOnly = true)

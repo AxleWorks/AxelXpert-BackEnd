@@ -1,26 +1,54 @@
 package com.login.AxleXpert.common;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 @Service
 public class EmailService {
     
-    private final JavaMailSender mailSender;
+    private static final Logger log = LoggerFactory.getLogger(EmailService.class);
+    
+    @Autowired
+    private JavaMailSender mailSender;
 
-    public EmailService(JavaMailSender mailSender) {
-        this.mailSender = mailSender;
+    /**
+     * Send HTML email (for password reset, etc.)
+     */
+    public void sendEmail(String to, String subject, String htmlBody) {
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(htmlBody, true); // true = HTML content
+            helper.setFrom("axlexpert.info@gmail.com");
+            
+            mailSender.send(mimeMessage);
+            System.out.println("✓ Email sent successfully to: " + to);
+            
+        } catch (MessagingException e) {
+            System.err.println("✗ Failed to send email to " + to);
+            System.err.println("Error details: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to send email: " + e.getMessage(), e);
+        }
     }
 
-    //Send welcome email with login credentials to new employee
+    /**
+     * Send welcome email with login credentials to new employee
+     */
     public void sendWelcomeEmail(String toEmail, String password, String role, String branchName) {
         try {
-            System.out.println("=== PREPARING EMAIL ===");
-            System.out.println("To: " + toEmail);
-            System.out.println("Password: " + password);
-            System.out.println("Role: " + role);
-            System.out.println("Branch: " + branchName);
+            log.info("Sending welcome email to: {}", toEmail);
             
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom("axlexpert.info@gmail.com");
@@ -43,19 +71,18 @@ public class EmailService {
             
             message.setText(emailBody);
             
-            System.out.println("Sending email via JavaMailSender...");
             mailSender.send(message);
-            System.out.println("✓ Welcome email sent successfully to: " + toEmail);
+            log.info("Welcome email sent successfully to: {}", toEmail);
             
         } catch (Exception e) {
-            System.err.println("✗ Failed to send email to " + toEmail);
-            System.err.println("Error details: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Failed to send welcome email to {}: {}", toEmail, e.getMessage(), e);
             throw new RuntimeException("Failed to send welcome email: " + e.getMessage(), e);
         }
     }
 
-    //Generate a random 6-character password
+    /**
+     * Generate a random 6-character password
+     */
     public String generateRandomPassword() {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         StringBuilder password = new StringBuilder();
