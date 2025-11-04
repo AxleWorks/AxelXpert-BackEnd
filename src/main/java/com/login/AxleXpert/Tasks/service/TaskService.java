@@ -402,6 +402,7 @@ public class TaskService {
                         .collect(Collectors.toList()),
                 task.getSheduledTime(),
                 task.getStartTime(),
+                task.getCompletedTime(),
                 task.getEstimatedTimeMinutes()
         );
     }

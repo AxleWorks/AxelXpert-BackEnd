@@ -19,6 +19,7 @@ public record EmployeeTaskDTO(
     List<TaskImageDTO> taskImages,
     LocalDateTime sheduledTime,
     LocalDateTime startTime,
+    LocalDateTime completedTime,
     Integer estimatedTimeMinutes
 
 ) {} 
