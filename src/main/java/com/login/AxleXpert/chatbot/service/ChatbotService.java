@@ -1,14 +1,16 @@
 package com.login.AxleXpert.chatbot.service;
 
-import com.login.AxleXpert.chatbot.dto.ChatMessage;
-import com.login.AxleXpert.chatbot.dto.RagRequest;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.springframework.stereotype.Service;
+
+import com.login.AxleXpert.chatbot.dto.ChatMessage;
+import com.login.AxleXpert.chatbot.dto.RagRequest;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
 
 /**
  * Main Chatbot Service that orchestrates RAG and AI services
@@ -148,14 +150,14 @@ public class ChatbotService {
      * Generate welcome message for new sessions
      */
     public ChatMessage getWelcomeMessage(String sessionId) {
-        String welcomeText = "👋 Welcome to AxleXpert! I'm your AI assistant here to help with all your vehicle service needs.\n\n" +
+        String welcomeText = "👋 **Welcome to AxleXpert!** I'm your AI assistant here to help with all your vehicle service needs.\n\n" +
                 "I can help you with:\n" +
-                "• Service information and pricing\n" +
-                "• Booking appointments\n" +
-                "• Finding branch locations\n" +
-                "• Vehicle maintenance advice\n" +
-                "• Service status updates\n\n" +
-                "Feel free to ask me anything about our services, or type /help for quick commands!";
+                "- Service information and pricing\n" +
+                "- Booking appointments\n" +
+                "- Finding branch locations\n" +
+                "- Vehicle maintenance advice\n" +
+                "- Service status updates\n\n" +
+                "Feel free to ask me anything about our services, or type `/help` for quick commands!";
 
         return new ChatMessage(
                 ChatMessage.MessageType.BOT,
@@ -190,54 +192,54 @@ public class ChatbotService {
 
     private String getHelpMessage() {
         return "🔧 **AxleXpert Help Commands**\n\n" +
-                "• `/services` - View our service offerings\n" +
-                "• `/locations` - Find our branch locations\n" +
-                "• `/hours` - See our operating hours\n" +
-                "• `/contact` - Get contact information\n\n" +
+                "- `/services` - View our service offerings\n" +
+                "- `/locations` - Find our branch locations\n" +
+                "- `/hours` - See our operating hours\n" +
+                "- `/contact` - Get contact information\n\n" +
                 "You can also ask me natural questions like:\n" +
-                "• \"How much does an oil change cost?\"\n" +
-                "• \"What services do you offer?\"\n" +
-                "• \"Where is your nearest location?\"\n" +
-                "• \"How do I book an appointment?\"";
+                "- \"How much does an oil change cost?\"\n" +
+                "- \"What services do you offer?\"\n" +
+                "- \"Where is your nearest location?\"\n" +
+                "- \"How do I book an appointment?\"";
     }
 
     private String getServicesMessage() {
         return "🔧 **Our Services**\n\n" +
-                "• **Oil Change** - From $30\n" +
-                "• **Brake Service** - From $80\n" +
-                "• **Tire Service** - From $50\n" +
-                "• **Engine Diagnostics** - From $100\n" +
-                "• **Transmission Service** - From $120\n" +
-                "• **AC Service** - From $70\n" +
-                "• **Battery Service** - From $90\n" +
-                "• **Electrical Diagnostics** - From $85\n\n" +
+                "- **Oil Change** - From $30\n" +
+                "- **Brake Service** - From $80\n" +
+                "- **Tire Service** - From $50\n" +
+                "- **Engine Diagnostics** - From $100\n" +
+                "- **Transmission Service** - From $120\n" +
+                "- **AC Service** - From $70\n" +
+                "- **Battery Service** - From $90\n" +
+                "- **Electrical Diagnostics** - From $85\n\n" +
                 "For detailed information about any service, just ask!";
     }
 
     private String getLocationsMessage() {
         return "📍 **Our Locations**\n\n" +
-                "• **Downtown Branch** - 123 Main Street\n" +
-                "• **North Branch** - 456 Oak Avenue\n" +
-                "• **South Branch** - 789 Pine Road\n" +
-                "• **West Branch** - 321 Elm Street\n" +
-                "• **East Branch** - 654 Maple Drive\n\n" +
+                "- **Downtown Branch** - 123 Main Street\n" +
+                "- **North Branch** - 456 Oak Avenue\n" +
+                "- **South Branch** - 789 Pine Road\n" +
+                "- **West Branch** - 321 Elm Street\n" +
+                "- **East Branch** - 654 Maple Drive\n\n" +
                 "All branches offer the same high-quality services!";
     }
 
     private String getHoursMessage() {
         return "🕒 **Operating Hours**\n\n" +
-                "• **Monday - Friday**: 8:00 AM - 6:00 PM\n" +
-                "• **Saturday**: 9:00 AM - 4:00 PM\n" +
-                "• **Sunday**: Closed\n\n" +
-                "Emergency services available 24/7!";
+                "- **Monday - Friday**: 8:00 AM - 6:00 PM\n" +
+                "- **Saturday**: 9:00 AM - 4:00 PM\n" +
+                "- **Sunday**: Closed\n\n" +
+                "*Emergency services available 24/7!*";
     }
 
     private String getContactMessage() {
         return "📞 **Contact Information**\n\n" +
-                "• **Phone**: 1-800-AXLEXPERT (1-800-295-3977)\n" +
-                "• **Email**: support@axlexpert.com\n" +
-                "• **Emergency**: 1-800-EMERGENCY\n" +
-                "• **Live Chat**: Available during business hours\n\n" +
-                "We're here to help 24/7!";
+                "- **Phone**: 1-800-AXLEXPERT (1-800-295-3977)\n" +
+                "- **Email**: support@axlexpert.com\n" +
+                "- **Emergency**: 1-800-EMERGENCY\n" +
+                "- **Live Chat**: Available during business hours\n\n" +
+                "*We're here to help 24/7!*";
     }
 }
