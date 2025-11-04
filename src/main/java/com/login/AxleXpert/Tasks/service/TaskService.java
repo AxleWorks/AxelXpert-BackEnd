@@ -16,10 +16,12 @@ import com.login.AxleXpert.bookings.repository.BookingRepository;
 import com.login.AxleXpert.Tasks.dto.CreateSubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.CreateTaskNoteDTO;
 import com.login.AxleXpert.Tasks.dto.EmployeeTaskDTO;
+import com.login.AxleXpert.Tasks.dto.ProgressTrackingDTO;
 import com.login.AxleXpert.Tasks.dto.SubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.TaskDTO;
 import com.login.AxleXpert.Tasks.dto.TaskImageDTO;
 import com.login.AxleXpert.Tasks.dto.TaskNoteDTO;
+import com.login.AxleXpert.Tasks.dto.TechnicianNoteInfo;
 import com.login.AxleXpert.Tasks.dto.UpdateSubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.UpdateTaskDTO;
 import com.login.AxleXpert.Tasks.entity.SubTask;
@@ -130,6 +132,16 @@ public class TaskService {
     public List<TaskDTO> getTasksByCustomer(Long customerId) {
         List<Task> tasks = taskRepository.findByCustomerId(customerId);
         return tasks.stream().map(this::toTaskDTO).collect(Collectors.toList());
+    }
+
+    // New method for Customer Progress Tracking Feature
+    @Transactional(readOnly = true)
+    public List<ProgressTrackingDTO> getTasksForCustomerProgressTracking(Long customerId) {
+        List<Task> tasks = taskRepository.findByCustomerId(customerId);
+        
+        return tasks.stream()
+                .map(this::toProgressTrackingDTO)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -381,6 +393,43 @@ public class TaskService {
                         .map(this::toTaskImageDTO)
                         .collect(Collectors.toList()),
                 task.getSheduledTime()
+        );
+    }
+
+    // Converts a Task entity to ProgressTrackingDTO.
+    private ProgressTrackingDTO toProgressTrackingDTO(Task task) {
+        List<TechnicianNoteInfo> technicianNotes = task.getTaskNotes().stream()
+                .filter(note -> note.getNoteType() == NoteType.EMPLOYEE_NOTE)
+                .sorted((n1, n2) -> n1.getCreatedAt().compareTo(n2.getCreatedAt())) // oldest first
+                .map(note -> new TechnicianNoteInfo(
+                        note.getContent(),
+                        note.getCreatedAt()
+                ))
+                .collect(Collectors.toList());
+        
+        List<String> progressPhotos = task.getTaskImages().stream()
+                .map(TaskImage::getImageUrl)
+                .collect(Collectors.toList());
+        
+        // Map subtasks (reusing existing logic)
+        List<SubTaskDTO> subTasks = task.getSubTasks().stream()
+                .map(this::toSubTaskDTO)
+                .collect(Collectors.toList());
+        
+        return new ProgressTrackingDTO(
+                task.getId(),
+                task.getBooking().getCustomerName(),
+                task.getBooking().getVehicle(),
+                task.getBooking().getService().getDurationMinutes(),
+                task.getTitle(),
+                task.getDescription(),
+                task.getStatus(),
+                technicianNotes,
+                progressPhotos,
+                subTasks,
+                task.getStartTime(),       
+                task.getCompletedTime(),    
+                task.getUpdatedAt()
         );
     }
 
