@@ -282,7 +282,9 @@ public class TaskService {
         return notes.stream().map(this::toTaskNoteDTO).collect(Collectors.toList());
     }
 
-    public TaskImageDTO addTaskImage(Long taskId, String imageUrl, String description) {
+
+
+    public TaskImageDTO addTaskImage(Long taskId, String imageUrl, String description, String publicId) {
         Optional<Task> taskOpt = taskRepository.findById(taskId);
         if (taskOpt.isEmpty()) {
             throw new IllegalArgumentException("Task not found with id: " + taskId);
@@ -294,9 +296,19 @@ public class TaskService {
         taskImage.setTask(task);
         taskImage.setImageUrl(imageUrl);
         taskImage.setDescription(description);
+        taskImage.setPublicId(publicId);
 
         TaskImage savedImage = taskImageRepository.save(taskImage);
         return toTaskImageDTO(savedImage);
+    }
+            
+    public void deleteTaskNote(Long noteId) {
+        Optional<TaskNote> noteOpt = taskNoteRepository.findById(noteId);
+        if (noteOpt.isEmpty()) {
+            throw new IllegalArgumentException("Task note not found with id: " + noteId);
+        }
+
+        taskNoteRepository.delete(noteOpt.get());
     }
 
     @Transactional(readOnly = true)
@@ -362,6 +374,12 @@ public class TaskService {
                 task.getSubTasks().stream()
                         .map(this::toSubTaskDTO)
                         .collect(Collectors.toList()),
+                task.getTaskNotes().stream()
+                        .map(this::toTaskNoteDTO)
+                        .collect(Collectors.toList()),
+                task.getTaskImages().stream()
+                        .map(this::toTaskImageDTO)
+                        .collect(Collectors.toList()),
                 task.getSheduledTime()
         );
     }
@@ -397,6 +415,7 @@ public class TaskService {
                 taskImage.getId(),
                 taskImage.getTask().getId(),
                 taskImage.getImageUrl(),
+                taskImage.getPublicId(),
                 taskImage.getDescription(),
                 taskImage.getCreatedAt()
         );

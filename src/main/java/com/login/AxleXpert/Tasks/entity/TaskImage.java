@@ -35,6 +35,9 @@ public class TaskImage {
     @Column(nullable = false)
     private String imageUrl;
 
+    @Column
+    private String publicId;
+
     @Column(columnDefinition = "TEXT")
     private String description;
 
