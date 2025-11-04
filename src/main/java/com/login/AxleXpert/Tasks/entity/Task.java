@@ -81,6 +81,12 @@ public class Task {
     @Column(name = "completed_time")
     private LocalDateTime completedTime;
 
+    @Column(name = "service_id", nullable = false)
+    private Long serviceId;
+
+    @Column(name = "estimated_time_minutes")
+    private Integer estimatedTimeMinutes;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -101,6 +107,7 @@ public class Task {
         boolean allCompleted = subTasks.stream().allMatch(st -> st.getStatus() == TaskStatus.COMPLETED);
         boolean anyInProgress = subTasks.stream().anyMatch(st -> st.getStatus() == TaskStatus.IN_PROGRESS);
         boolean anyOnHold = subTasks.stream().anyMatch(st -> st.getStatus() == TaskStatus.ON_HOLD);
+        boolean anyStarted = subTasks.stream().anyMatch(st -> st.getStatus() != TaskStatus.NOT_STARTED);
 
         if (allCompleted) {
             return TaskStatus.COMPLETED;
@@ -108,6 +115,8 @@ public class Task {
             return TaskStatus.ON_HOLD;
         } else if (anyInProgress) {
             return TaskStatus.IN_PROGRESS;
+        } else if (anyStarted) {
+            return TaskStatus.IN_PROGRESS; // Some subtasks completed but not all
         } else {
             return TaskStatus.NOT_STARTED;
         }

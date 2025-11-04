@@ -1,5 +1,6 @@
 package com.login.AxleXpert.Tasks.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -95,6 +96,9 @@ public class TaskService {
         Task task = new Task();
         task.setBooking(booking);
         task.setAssignedEmployee(employee);
+        task.setServiceId(booking.getService().getId());
+        task.setEstimatedTimeMinutes(booking.getService().getDurationMinutes());
+        task.setStartTime(LocalDateTime.now()); // Set task started time
         task.setTitle("Service Task - " + booking.getService().getName());
         task.setDescription("Complete the " + booking.getService().getName() + " service for customer: " + booking.getCustomerName());
         task.setStatus(TaskStatus.NOT_STARTED);
@@ -360,17 +364,21 @@ public class TaskService {
         return new TaskDTO(
                 task.getId(),
                 task.getBooking().getId(),
+                task.getServiceId(),
                 task.getAssignedEmployee().getId(),
                 task.getAssignedEmployee().getUsername(),
+                task.getBooking().getVehicle(),
                 task.getTitle(),
                 task.getDescription(),
                 task.getStatus(),
                 task.calculateOverallStatus(),
+                task.getEstimatedTimeMinutes(),
                 subTasks,
                 taskNotes,
                 taskImages,
                 task.getCreatedAt(),
-                task.getUpdatedAt()
+                task.getUpdatedAt(),
+                task.getStartTime()
         );
     }
 
