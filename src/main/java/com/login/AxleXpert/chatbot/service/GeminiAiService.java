@@ -1,19 +1,21 @@
 package com.login.AxleXpert.chatbot.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.login.AxleXpert.chatbot.dto.RagRequest;
-import lombok.extern.slf4j.Slf4j;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.login.AxleXpert.chatbot.dto.RagRequest;
+
+import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
 
 /**
  * Gemini AI Service for handling LLM interactions
@@ -91,7 +93,10 @@ public class GeminiAiService {
         promptBuilder.append("INSTRUCTIONS:\n");
         promptBuilder.append("- Answer based on the context provided above\n");
         promptBuilder.append("- Be friendly, professional, and helpful\n");
-        promptBuilder.append("- If asked about services not in the context, politely redirect to contact support\n");
+        promptBuilder.append("- Use Markdown formatting for better readability (bold, lists, line breaks)\n");
+        promptBuilder.append("- Use **bold** for emphasis and important information\n");
+        promptBuilder.append("- Use bullet points (-) for lists of services, options, or steps\n");
+        promptBuilder.append("- Use *italics* for subtle emphasis or notes\n");
         promptBuilder.append("- Keep responses concise but informative\n");
         promptBuilder.append("- Always encourage booking services when appropriate\n");
         promptBuilder.append("- If you don't know something, admit it and suggest contacting support\n\n");
