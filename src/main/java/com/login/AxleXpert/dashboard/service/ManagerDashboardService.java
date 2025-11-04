@@ -1,5 +1,6 @@
 package com.login.AxleXpert.dashboard.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,34 +46,45 @@ public class ManagerDashboardService {
     }
 
     public ManagerStatsDTO getManagerStats() {
-        Long branchId = currentUserUtil.getCurrentUserBranchId();
+        // Revenue stats - all branches
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfThisMonth = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+        LocalDateTime startOfLastMonth = startOfThisMonth.minusMonths(1);
+        LocalDateTime endOfLastMonth = startOfThisMonth.minusSeconds(1);
 
-        // Revenue stats
-        double totalRevenue = bookingRepository.findAll().stream()
-                .filter(b -> b.getBranch() != null && b.getBranch().getId().equals(branchId) && b.getStatus() == BookingStatus.APPROVED)
+        double thisMonthRevenue = bookingRepository.findAll().stream()
+                .filter(b -> b.getStatus() == BookingStatus.APPROVED && b.getCreatedAt() != null && b.getCreatedAt().isAfter(startOfThisMonth))
                 .mapToDouble(b -> b.getTotalPrice() != null ? b.getTotalPrice().doubleValue() : 0.0)
                 .sum();
+        double lastMonthRevenue = bookingRepository.findAll().stream()
+                .filter(b -> b.getStatus() == BookingStatus.APPROVED && b.getCreatedAt() != null && b.getCreatedAt().isAfter(startOfLastMonth) && b.getCreatedAt().isBefore(endOfLastMonth))
+                .mapToDouble(b -> b.getTotalPrice() != null ? b.getTotalPrice().doubleValue() : 0.0)
+                .sum();
+        double revenuePercentage = lastMonthRevenue > 0 ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue * 100) : 0;
+        String revenueChange = String.format("%+.1f%% this month", revenuePercentage);
+
         StatsItemDTO revenueStats = new StatsItemDTO(
-            "$" + String.format("%.1fK", totalRevenue / 1000),
-            "+12.5% this month",
+            "$" + String.format("%.1fK", thisMonthRevenue / 1000),
+            revenueChange,
             Arrays.asList(
-                new DetailItemDTO("This Month", "$" + String.format("%.1fK", totalRevenue / 1000)),
-                new DetailItemDTO("Last Month", "$40.1K"),
-                new DetailItemDTO("Services", "$28.5K"),
-                new DetailItemDTO("Parts", "$16.7K")
+                new DetailItemDTO("This Month", "$" + String.format("%.1fK", thisMonthRevenue / 1000)),
+                new DetailItemDTO("Last Month", "$" + String.format("%.1fK", lastMonthRevenue / 1000)),
+                new DetailItemDTO("Services", "$28.5K"), // Mock
+                new DetailItemDTO("Parts", "$16.7K") // Mock
             )
         );
 
-        // Users stats
-        long totalUsers = userRepository.findAll().stream()
-                .filter(u -> u.getBranch() != null && u.getBranch().getId().equals(branchId))
-                .count();
-        long employees = userRepository.findAll().stream()
-                .filter(u -> "EMPLOYEE".equalsIgnoreCase(u.getRole()) && u.getBranch() != null && u.getBranch().getId().equals(branchId))
-                .count();
+        // Users stats - all branches
+        long totalUsers = userRepository.count();
+        long employees = userRepository.findByRoleIgnoreCase("EMPLOYEE").size();
         long customers = totalUsers - employees;
         long newUsersThisWeek = userRepository.findAll().stream()
-                .filter(u -> u.getBranch() != null && u.getBranch().getId().equals(branchId) && u.getCreatedAt() != null && u.getCreatedAt().isAfter(LocalDateTime.now().minusWeeks(1)))
+                .filter(u -> u.getCreatedAt() != null && u.getCreatedAt().isAfter(LocalDateTime.now().minusWeeks(1)))
+                .count();
+        long activeUsersToday = bookingRepository.findAll().stream()
+                .filter(b -> b.getCreatedAt() != null && b.getCreatedAt().toLocalDate().equals(LocalDate.now()))
+                .map(b -> b.getCustomerName()) // Assuming unique by name, or use distinct
+                .distinct()
                 .count();
 
         StatsItemDTO usersStats = new StatsItemDTO(
@@ -82,43 +94,46 @@ public class ManagerDashboardService {
                 new DetailItemDTO("Employees", String.valueOf(employees)),
                 new DetailItemDTO("Customers", String.valueOf(customers)),
                 new DetailItemDTO("New This Week", String.valueOf(newUsersThisWeek)),
-                new DetailItemDTO("Active Today", "45") // Mock data
+                new DetailItemDTO("Active Today", String.valueOf(activeUsersToday))
             )
         );
 
-        // Bookings stats
-        long totalBookings = bookingRepository.findAll().stream()
-                .filter(b -> b.getBranch() != null && b.getBranch().getId().equals(branchId))
-                .count();
+        // Bookings stats - all branches
+        long totalBookings = bookingRepository.count();
         long confirmedBookings = bookingRepository.findAll().stream()
-                .filter(b -> b.getStatus() == BookingStatus.APPROVED && b.getBranch() != null && b.getBranch().getId().equals(branchId))
+                .filter(b -> b.getStatus() == BookingStatus.APPROVED)
                 .count();
         long pendingBookings = bookingRepository.findAll().stream()
-                .filter(b -> b.getStatus() == BookingStatus.PENDING && b.getBranch() != null && b.getBranch().getId().equals(branchId))
+                .filter(b -> b.getStatus() == BookingStatus.PENDING)
                 .count();
         long bookingsThisWeek = bookingRepository.findAll().stream()
-                .filter(b -> b.getBranch() != null && b.getBranch().getId().equals(branchId) && b.getCreatedAt() != null && b.getCreatedAt().isAfter(LocalDateTime.now().minusWeeks(1)))
+                .filter(b -> b.getCreatedAt() != null && b.getCreatedAt().isAfter(LocalDateTime.now().minusWeeks(1)))
+                .count();
+        long bookingsToday = bookingRepository.findAll().stream()
+                .filter(b -> b.getCreatedAt() != null && b.getCreatedAt().toLocalDate().equals(LocalDate.now()))
                 .count();
 
         StatsItemDTO bookingsStats = new StatsItemDTO(
             String.valueOf(bookingsThisWeek),
-            "+15 today",
+            "+" + bookingsToday + " today",
             Arrays.asList(
-                new DetailItemDTO("Today", "15"), // Mock data
+                new DetailItemDTO("Today", String.valueOf(bookingsToday)),
                 new DetailItemDTO("This Week", String.valueOf(bookingsThisWeek)),
                 new DetailItemDTO("Confirmed", String.valueOf(confirmedBookings)),
                 new DetailItemDTO("Pending", String.valueOf(pendingBookings))
             )
         );
 
-        // Branches stats - only current branch
-        Branch currentBranch = branchRepository.findById(branchId).orElse(null);
+        // Branches stats - all branches
+        long totalBranches = branchRepository.count();
+        List<DetailItemDTO> branchDetails = branchRepository.findAll().stream()
+                .map(b -> new DetailItemDTO(b.getName(), "Active"))
+                .collect(Collectors.toList());
+
         StatsItemDTO branchesStats = new StatsItemDTO(
-            "1",
-            "Operational",
-            Arrays.asList(
-                new DetailItemDTO(currentBranch != null ? currentBranch.getName() : "N/A", "Active")
-            )
+            String.valueOf(totalBranches),
+            "All operational",
+            branchDetails
         );
 
         // Performance stats - mock data
@@ -158,30 +173,31 @@ public class ManagerDashboardService {
     }
 
     public List<BranchPerformanceDTO> getBranchPerformance() {
-        Long branchId = currentUserUtil.getCurrentUserBranchId();
-        Branch branch = branchRepository.findById(branchId).orElse(null);
-        if (branch == null) return new ArrayList<>();
-        long services = bookingRepository.findAll().stream()
-                .filter(b -> b.getBranch() != null && b.getBranch().getId().equals(branchId))
-                .count();
-        double revenue = bookingRepository.findAll().stream()
-                .filter(b -> b.getBranch() != null && b.getBranch().getId().equals(branchId) && b.getStatus() == BookingStatus.APPROVED)
-                .mapToDouble(b -> b.getTotalPrice() != null ? b.getTotalPrice().doubleValue() : 0.0)
-                .sum();
-        long confirmed = bookingRepository.findAll().stream()
-                .filter(b -> b.getBranch() != null && b.getBranch().getId().equals(branchId) && b.getStatus() == BookingStatus.APPROVED)
-                .count();
-        int efficiency = services > 0 ? (int) ((double) confirmed / services * 100) : 0;
-        long employees = userRepository.findAll().stream()
-                .filter(u -> "EMPLOYEE".equalsIgnoreCase(u.getRole()) && u.getBranch() != null && u.getBranch().getId().equals(branchId))
-                .count();
-        return List.of(new BranchPerformanceDTO(
-            branch.getName(),
-            (int) services,
-            (int) revenue,
-            efficiency,
-            (int) employees
-        ));
+        return branchRepository.findAll().stream()
+                .map(branch -> {
+                    long services = bookingRepository.findAll().stream()
+                            .filter(b -> b.getBranch() != null && b.getBranch().getId().equals(branch.getId()))
+                            .count();
+                    double revenue = bookingRepository.findAll().stream()
+                            .filter(b -> b.getBranch() != null && b.getBranch().getId().equals(branch.getId()) && b.getStatus() == BookingStatus.APPROVED)
+                            .mapToDouble(b -> b.getTotalPrice() != null ? b.getTotalPrice().doubleValue() : 0.0)
+                            .sum();
+                    long confirmed = bookingRepository.findAll().stream()
+                            .filter(b -> b.getBranch() != null && b.getBranch().getId().equals(branch.getId()) && b.getStatus() == BookingStatus.APPROVED)
+                            .count();
+                    int efficiency = services > 0 ? (int) ((double) confirmed / services * 100) : 0;
+                    long employees = userRepository.findAll().stream()
+                            .filter(u -> "EMPLOYEE".equalsIgnoreCase(u.getRole()) && u.getBranch() != null && u.getBranch().getId().equals(branch.getId()))
+                            .count();
+                    return new BranchPerformanceDTO(
+                        branch.getName(),
+                        (int) services,
+                        (int) revenue,
+                        efficiency,
+                        (int) employees
+                    );
+                })
+                .collect(Collectors.toList());
     }
 
     public List<ServiceDistributionDTO> getServiceDistribution() {
