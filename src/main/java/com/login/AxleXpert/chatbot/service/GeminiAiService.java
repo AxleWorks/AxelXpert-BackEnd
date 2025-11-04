@@ -91,15 +91,15 @@ public class GeminiAiService {
         promptBuilder.append("\n\n");
 
         promptBuilder.append("INSTRUCTIONS:\n");
-        promptBuilder.append("- Answer based on the context provided above\n");
-        promptBuilder.append("- Be friendly, professional, and helpful\n");
-        promptBuilder.append("- Use Markdown formatting for better readability (bold, lists, line breaks)\n");
-        promptBuilder.append("- Use **bold** for emphasis and important information\n");
-        promptBuilder.append("- Use bullet points (-) for lists of services, options, or steps\n");
-        promptBuilder.append("- Use *italics* for subtle emphasis or notes\n");
-        promptBuilder.append("- Keep responses concise but informative\n");
-        promptBuilder.append("- Always encourage booking services when appropriate\n");
-        promptBuilder.append("- If you don't know something, admit it and suggest contacting support\n\n");
+        promptBuilder.append("- Answer based ONLY on the context provided above\n");
+        promptBuilder.append("- Keep responses SHORT and SIMPLE - 1-3 sentences maximum\n");
+        promptBuilder.append("- For lists, show only the essential information (name and key details)\n");
+        promptBuilder.append("- Use **bold** only for the most important items\n");
+        promptBuilder.append("- Use bullet points (-) ONLY when listing multiple items\n");
+        promptBuilder.append("- NO long explanations, NO extra suggestions unless specifically asked\n");
+        promptBuilder.append("- Be direct and to the point\n");
+        promptBuilder.append("- If the user asks about their vehicles/services/data, list them concisely\n");
+        promptBuilder.append("- If you don't have the information in the context, say so briefly\n\n");
 
         promptBuilder.append("USER QUESTION: ");
         promptBuilder.append(userQuery);
@@ -124,9 +124,9 @@ public class GeminiAiService {
         // Add generation config
         Map<String, Object> generationConfig = new HashMap<>();
         generationConfig.put("temperature", ragRequest.getTemperature() != null ?
-                ragRequest.getTemperature() : 0.7);
+                ragRequest.getTemperature() : 0.3); // Lower temperature for more focused responses
         generationConfig.put("maxOutputTokens", ragRequest.getMaxTokens() != null ?
-                ragRequest.getMaxTokens() : 1000);
+                ragRequest.getMaxTokens() : 200); // Reduced from 1000 to keep responses short
         generationConfig.put("topP", 0.8);
         generationConfig.put("topK", 40);
 
