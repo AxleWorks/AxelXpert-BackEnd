@@ -42,6 +42,22 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     long countCompletedTodayByEmployee(@Param("employeeId") Long employeeId, 
                                       @Param("today") LocalDateTime today);
 
+    @Query("SELECT COUNT(t) FROM Task t WHERE t.booking.customer.id = :customerId AND t.status IN :statuses")
+    long countByCustomerIdAndStatusIn(@Param("customerId") Long customerId, 
+                                     @Param("statuses") List<TaskStatus> statuses);
+
+    @Query("SELECT COUNT(t) FROM Task t WHERE t.booking.customer.id = :customerId AND t.status = :status")
+    long countByCustomerIdAndStatus(@Param("customerId") Long customerId, 
+                                   @Param("status") TaskStatus status);
+
+    @Query("SELECT COUNT(t) FROM Task t WHERE t.booking.customer.id = :customerId AND DATE(t.completedTime) = DATE(:today)")
+    long countCompletedTodayByCustomer(@Param("customerId") Long customerId, 
+                                      @Param("today") LocalDateTime today);
+
+    @Query("SELECT COUNT(t) FROM Task t WHERE t.booking.customer.id = :customerId AND MONTH(t.completedTime) = MONTH(:now) AND YEAR(t.completedTime) = YEAR(:now)")
+    long countCompletedThisMonthByCustomer(@Param("customerId") Long customerId, 
+                                          @Param("now") LocalDateTime now);
+
     @Query("SELECT t FROM Task t WHERE t.assignedEmployee.id = :employeeId ORDER BY t.createdAt DESC")
     List<Task> findByAssignedEmployeeIdOrderByCreatedAtDesc(@Param("employeeId") Long employeeId);
 }

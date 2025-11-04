@@ -3,13 +3,13 @@ package com.login.AxleXpert.dashboard.service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.login.AxleXpert.Tasks.entity.Task;
 import com.login.AxleXpert.Tasks.repository.TaskRepository;
 import com.login.AxleXpert.Users.entity.User;
 import com.login.AxleXpert.Vehicals.repository.VehicleRepository;
@@ -49,6 +49,63 @@ public class UserDashboardService {
     public UserStatsDTO getUserStats() {
         User currentUser = currentUserUtil.getCurrentUser();
 
+        // Get all bookings for the user
+        List<Booking> allBookings = bookingRepository.findByCustomerId(currentUser.getId());
+
+        LocalDateTime now = LocalDateTime.now();
+
+        // Compute appointment counts
+        long completedAppointments = allBookings.stream()
+                .filter(b -> b.getStatus() == BookingStatus.COMPLETED)
+                .count();
+        long inProgressAppointments = allBookings.stream()
+                .filter(b -> b.getStatus() == BookingStatus.APPROVED)
+                .count();
+        long pendingAppointments = allBookings.stream()
+                .filter(b -> b.getStatus() == BookingStatus.PENDING)
+                .count();
+
+        // Compute this week/month counts for appointments
+        long pendingThisWeek = allBookings.stream()
+                .filter(b -> b.getStatus() == BookingStatus.PENDING && b.getStartAt() != null && b.getStartAt().isAfter(now) && b.getStartAt().isBefore(now.plusWeeks(1)))
+                .count();
+        long pendingThisMonth = allBookings.stream()
+                .filter(b -> b.getStatus() == BookingStatus.PENDING && b.getStartAt() != null && b.getStartAt().getMonth() == now.getMonth())
+                .count();
+
+        // Compute next dates
+        String nextPending = allBookings.stream()
+                .filter(b -> b.getStatus() == BookingStatus.PENDING && b.getStartAt() != null && b.getStartAt().isAfter(now))
+                .min((b1, b2) -> b1.getStartAt().compareTo(b2.getStartAt()))
+                .map(b -> b.getStartAt().toLocalDate().toString())
+                .orElse("None");
+
+        // Compute task counts for active tasks
+        long inProgressTasks = taskRepository.countByCustomerIdAndStatus(currentUser.getId(), TaskStatus.IN_PROGRESS);
+        long pendingTasks = taskRepository.countByCustomerIdAndStatus(currentUser.getId(), TaskStatus.NOT_STARTED);
+        long completedTodayTasks = taskRepository.countCompletedTodayByCustomer(currentUser.getId(), now);
+        long completedThisMonthTasks = taskRepository.countCompletedThisMonthByCustomer(currentUser.getId(), now);
+        long totalCompletedTasks = taskRepository.countByCustomerIdAndStatus(currentUser.getId(), TaskStatus.COMPLETED);
+
+        // Get completed tasks for service details
+        List<Task> completedTasks = taskRepository.findByCustomerId(currentUser.getId()).stream()
+            .filter(t -> t.getStatus() == TaskStatus.COMPLETED)
+            .collect(Collectors.toList());
+
+        long oilChanges = completedTasks.stream()
+            .filter(t -> t.getBooking() != null && t.getBooking().getService() != null && 
+                        t.getBooking().getService().getName().toLowerCase().contains("oil"))
+            .count();
+        long brakeServices = completedTasks.stream()
+            .filter(t -> t.getBooking() != null && t.getBooking().getService() != null && 
+                        t.getBooking().getService().getName().toLowerCase().contains("brake"))
+            .count();
+        long inspections = completedTasks.stream()
+            .filter(t -> t.getBooking() != null && t.getBooking().getService() != null && 
+                        t.getBooking().getService().getName().toLowerCase().contains("inspection"))
+            .count();
+        long otherServices = totalCompletedTasks - oilChanges - brakeServices - inspections;
+
         // Vehicles stats
         List<UserVehicleDTO> vehicles = getUserVehicles();
         long totalVehicles = vehicles.size();
@@ -62,82 +119,46 @@ public class UserDashboardService {
             Arrays.asList(
                 new DetailItemDTO("Active Vehicles", String.valueOf(totalVehicles)),
                 new DetailItemDTO("Service Due", String.valueOf(vehiclesNeedingService)),
-                new DetailItemDTO("Recently Serviced", String.valueOf(totalVehicles - vehiclesNeedingService)),
-                new DetailItemDTO("Total Visits", "24") // Mock data
+                new DetailItemDTO("Recently Serviced", String.valueOf(totalVehicles - vehiclesNeedingService))
             )
         );
 
-        // Active tasks stats
-        long activeTasks = taskRepository.countByAssignedEmployeeIdAndStatusIn(
-            currentUser.getId(),
-            Arrays.asList(TaskStatus.IN_PROGRESS, TaskStatus.NOT_STARTED)
-        );
-        long pendingTasks = taskRepository.countByAssignedEmployeeIdAndStatus(
-            currentUser.getId(), TaskStatus.NOT_STARTED
-        );
-        long completedToday = taskRepository.countCompletedTodayByEmployee(currentUser.getId(), LocalDateTime.now());
-
+        // Active tasks stats -> In-progress and pending tasks
         StatsItemDTO activeTasksStats = new StatsItemDTO(
-            String.valueOf(activeTasks),
-            "+2 this week", // Mock data
+            String.valueOf(inProgressTasks + pendingTasks),
+            "+" + (inProgressTasks + pendingTasks) + " this week",
             Arrays.asList(
-                new DetailItemDTO("In Progress", String.valueOf(activeTasks - pendingTasks)),
+                new DetailItemDTO("In Progress", String.valueOf(inProgressTasks)),
                 new DetailItemDTO("Pending", String.valueOf(pendingTasks)),
-                new DetailItemDTO("Completed Today", String.valueOf(completedToday)),
-                new DetailItemDTO("This Month", "12") // Mock data
+                new DetailItemDTO("Completed Today", String.valueOf(completedTodayTasks)),
+                new DetailItemDTO("This Month", String.valueOf(completedThisMonthTasks))
             )
         );
 
-        // Service history stats
-        long totalServices = bookingRepository.countByCustomerIdAndStatus(
-            currentUser.getId(), BookingStatus.COMPLETED
-        );
-
+        // Service history stats -> Completed tasks
         StatsItemDTO serviceHistoryStats = new StatsItemDTO(
-            String.valueOf(totalServices),
-            "+3 this month", // Mock data
+            String.valueOf(totalCompletedTasks),
+            "+" + completedThisMonthTasks + " this month",
             Arrays.asList(
-                new DetailItemDTO("Oil Changes", "8"), // Mock data
-                new DetailItemDTO("Brake Services", "4"), // Mock data
-                new DetailItemDTO("Inspections", "6"), // Mock data
-                new DetailItemDTO("Other Services", "6") // Mock data
+                new DetailItemDTO("Oil Changes", String.valueOf(oilChanges)),
+                new DetailItemDTO("Brake Services", String.valueOf(brakeServices)),
+                new DetailItemDTO("Inspections", String.valueOf(inspections)),
+                new DetailItemDTO("Other Services", String.valueOf(otherServices))
             )
         );
 
-        // Appointments stats
-        List<UserAppointmentDTO> appointments = getUserAppointments();
-        long upcomingAppointments = appointments.stream()
-                .filter(a -> !"completed".equals(a.status()))
-                .count();
-        long confirmedAppointments = appointments.stream()
-                .filter(a -> "confirmed".equals(a.status()))
-                .count();
-
+        // Appointments stats -> Pending appointments
         StatsItemDTO appointmentsStats = new StatsItemDTO(
-            String.valueOf(upcomingAppointments),
-            "Next: Tomorrow", // Mock data
+            String.valueOf(pendingAppointments),
+            "Next: " + nextPending,
             Arrays.asList(
-                new DetailItemDTO("This Week", String.valueOf(upcomingAppointments)),
-                new DetailItemDTO("This Month", "4"), // Mock data
-                new DetailItemDTO("Confirmed", String.valueOf(confirmedAppointments)),
-                new DetailItemDTO("Past Appointments", "28") // Mock data
+                new DetailItemDTO("Confirmed", String.valueOf(inProgressAppointments))
             )
         );
 
-        // Satisfaction stats
-        StatsItemDTO satisfactionStats = new StatsItemDTO(
-            "4.8", // Mock data
-            "Excellent rating", // Mock data
-            Arrays.asList(
-                new DetailItemDTO("Average Rating", "4.8/5"), // Mock data
-                new DetailItemDTO("Total Reviews", "18"), // Mock data
-                new DetailItemDTO("5-Star Services", "15"), // Mock data
-                new DetailItemDTO("Recommendations", "12") // Mock data
-            )
-        );
 
         return new UserStatsDTO(vehiclesStats, activeTasksStats, serviceHistoryStats,
-                               appointmentsStats, satisfactionStats);
+                               appointmentsStats);
     }
 
     public List<UserVehicleDTO> getUserVehicles() {
