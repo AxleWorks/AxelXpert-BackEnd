@@ -198,7 +198,7 @@ public class UserDashboardService {
     public List<UserAppointmentDTO> getUserAppointments() {
         User currentUser = currentUserUtil.getCurrentUser();
         return bookingRepository.findByCustomerId(currentUser.getId()).stream()
-                .filter(booking -> booking.getStatus() != BookingStatus.CANCELLED)
+                .filter(booking -> booking.getStatus() == BookingStatus.PENDING)
                 .map(booking -> {
                     String date = booking.getStartAt() != null ?
                         booking.getStartAt().toLocalDate().toString() : "TBD";
@@ -266,7 +266,6 @@ public class UserDashboardService {
     public List<UserRecentTaskDTO> getUserRecentTasks() {
         User currentUser = currentUserUtil.getCurrentUser();
         return taskRepository.findByCustomerId(currentUser.getId()).stream()
-                .filter(t -> t.getStatus() == TaskStatus.COMPLETED)
                 .sorted((t1, t2) -> t2.getCreatedAt().compareTo(t1.getCreatedAt()))
                 .limit(10)
                 .map(task -> {
@@ -279,7 +278,6 @@ public class UserDashboardService {
                         task.getId(),
                         task.getTitle(),
                         task.getStatus().toString().replace("_", " "),
-                        "Normal", // Mock priority
                         vehicle,
                         date
                     );
