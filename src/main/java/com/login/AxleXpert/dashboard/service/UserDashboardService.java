@@ -3,8 +3,10 @@ package com.login.AxleXpert.dashboard.service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -219,23 +221,43 @@ public class UserDashboardService {
     public ServiceHistoryDTO getUserServiceHistory(int months) {
         User currentUser = currentUserUtil.getCurrentUser();
 
-        // Mock chart data - in real implementation, this would aggregate from bookings
-        List<ChartDataDTO> chartData = Arrays.asList(
-            new ChartDataDTO("Jan", 2, 150),
-            new ChartDataDTO("Feb", 1, 80),
-            new ChartDataDTO("Mar", 3, 220),
-            new ChartDataDTO("Apr", 2, 180),
-            new ChartDataDTO("May", 4, 350),
-            new ChartDataDTO("Jun", 1, 90)
-        );
+        LocalDateTime startDate = LocalDateTime.now().minusMonths(months);
+        List<Task> completedTasksInPeriod = taskRepository.findByCustomerId(currentUser.getId()).stream()
+            .filter(t -> t.getStatus() == TaskStatus.COMPLETED && t.getCompletedTime() != null && t.getCompletedTime().isAfter(startDate))
+            .collect(Collectors.toList());
 
-        // Mock breakdown data
-        List<BreakdownItemDTO> breakdown = Arrays.asList(
-            new BreakdownItemDTO("Oil Changes", 8, "#10b981", 8),
-            new BreakdownItemDTO("Brake Services", 4, "#3b82f6", 4),
-            new BreakdownItemDTO("Inspections", 6, "#f59e0b", 6),
-            new BreakdownItemDTO("Other Services", 6, "#8b5cf6", 6)
-        );
+        // Generate chart data for the last 'months' months
+        LocalDate now = LocalDate.now();
+        List<ChartDataDTO> chartData = new ArrayList<>();
+        for (int i = months - 1; i >= 0; i--) {
+            LocalDate monthStart = now.minusMonths(i).withDayOfMonth(1);
+            LocalDate monthEnd = monthStart.plusMonths(1).minusDays(1);
+            long count = completedTasksInPeriod.stream()
+                .filter(t -> {
+                    LocalDate completedDate = t.getCompletedTime().toLocalDate();
+                    return !completedDate.isBefore(monthStart) && !completedDate.isAfter(monthEnd);
+                })
+                .count();
+            int revenue = (int) (count * 100); // Mock revenue calculation
+            String monthName = monthStart.getMonth().name().substring(0, 3);
+            chartData.add(new ChartDataDTO(monthName, (int) count, revenue));
+        }
+
+        // Generate breakdown data by service type
+        Map<String, Long> serviceCounts = completedTasksInPeriod.stream()
+            .collect(Collectors.groupingBy(
+                t -> t.getBooking() != null && t.getBooking().getService() != null ? t.getBooking().getService().getName() : "Other Services",
+                Collectors.counting()
+            ));
+
+        String[] colors = {"#10b981", "#3b82f6", "#f59e0b", "#8b5cf6", "#ef4444", "#8b5cf6"};
+        List<BreakdownItemDTO> breakdown = new ArrayList<>();
+        int colorIndex = 0;
+        for (Map.Entry<String, Long> entry : serviceCounts.entrySet()) {
+            String color = colors[colorIndex % colors.length];
+            breakdown.add(new BreakdownItemDTO(entry.getKey(), entry.getValue().intValue(), color, entry.getValue().intValue()));
+            colorIndex++;
+        }
 
         return new ServiceHistoryDTO(chartData, breakdown);
     }
