@@ -38,7 +38,7 @@ public class SecurityConfig {
 
                 // ✅ Define authorization rules
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/status","api/health").permitAll() // Public endpoints (login/signup, checkstatus)
+                        .requestMatchers("/api/auth/**", "/status","api/health", "/api/chat/**").permitAll() // Public endpoints (login/signup, checkstatus, chat)
                         .anyRequest().authenticated() // All others require JWT
                 )
 
