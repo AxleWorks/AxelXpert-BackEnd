@@ -400,7 +400,9 @@ public class TaskService {
                 task.getTaskImages().stream()
                         .map(this::toTaskImageDTO)
                         .collect(Collectors.toList()),
-                task.getSheduledTime()
+                task.getSheduledTime(),
+                task.getStartTime(),
+                task.getEstimatedTimeMinutes()
         );
     }
 
