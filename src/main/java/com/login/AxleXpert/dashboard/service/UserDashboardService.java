@@ -149,12 +149,13 @@ public class UserDashboardService {
             )
         );
 
-        // Appointments stats -> Pending appointments
+        // Appointments stats -> Pending and in-progress appointments
         StatsItemDTO appointmentsStats = new StatsItemDTO(
-            String.valueOf(pendingAppointments),
+            String.valueOf(pendingAppointments + inProgressAppointments),
             "Next: " + nextPending,
             Arrays.asList(
-                new DetailItemDTO("Confirmed", String.valueOf(inProgressAppointments))
+                new DetailItemDTO("Pending", String.valueOf(pendingAppointments)),
+                new DetailItemDTO("In Progress", String.valueOf(inProgressAppointments))
             )
         );
 
@@ -264,13 +265,15 @@ public class UserDashboardService {
 
     public List<UserRecentTaskDTO> getUserRecentTasks() {
         User currentUser = currentUserUtil.getCurrentUser();
-        return taskRepository.findByAssignedEmployeeIdOrderByCreatedAtDesc(currentUser.getId()).stream()
+        return taskRepository.findByCustomerId(currentUser.getId()).stream()
+                .filter(t -> t.getStatus() == TaskStatus.COMPLETED)
+                .sorted((t1, t2) -> t2.getCreatedAt().compareTo(t1.getCreatedAt()))
                 .limit(10)
                 .map(task -> {
                     String vehicle = task.getBooking() != null && task.getBooking().getVehicle() != null ?
                         task.getBooking().getVehicle() : "N/A";
-                    String date = task.getCreatedAt() != null ?
-                        task.getCreatedAt().toLocalDate().toString() : "Today";
+                    String date = task.getCompletedTime() != null ?
+                        task.getCompletedTime().toLocalDate().toString() : "N/A";
 
                     return new UserRecentTaskDTO(
                         task.getId(),
