@@ -1,10 +1,16 @@
 package com.login.AxleXpert.chatbot.service;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Service;
 
+import com.login.AxleXpert.Branches.dto.BranchDTO;
+import com.login.AxleXpert.Services.dto.ServiceDTO;
+import com.login.AxleXpert.Tasks.dto.TaskDTO;
+import com.login.AxleXpert.Users.dto.UserDTO;
+import com.login.AxleXpert.Vehicals.dto.VehicleDTO;
 import com.login.AxleXpert.chatbot.dto.ChatMessage;
 import com.login.AxleXpert.chatbot.dto.RagRequest;
 
@@ -27,6 +33,7 @@ public class ChatbotService {
 
     private final RagService ragService;
     private final GeminiAiService geminiAiService;
+    private final BackendApiService backendApiService;
 
     // In-memory storage for session context (not persisted to database)
     private final Map<String, SessionContext> sessionContexts = new ConcurrentHashMap<>();
@@ -45,16 +52,19 @@ public class ChatbotService {
         // Update session context
         updateSessionContext(sessionId, userQuery);
 
-        // Handle special commands
-        if (isSpecialCommand(userQuery)) {
-            return handleSpecialCommand(userQuery, sessionId);
+        // Always fetch context data if userId is provided
+        String contextData = null;
+        if (message.getUserId() != null) {
+            contextData = getContextDataForQuery(userQuery, message.getUserId(), message.getAccessToken());
+            log.info("Fetched context data for user {}: {} characters", message.getUserId(), 
+                    contextData != null ? contextData.length() : 0);
         }
 
-        // Retrieve relevant context from knowledge base
-        String relevantContext = ragService.retrieveRelevantContext(userQuery);
+        // If we have context data, use it; otherwise fall back to RAG knowledge base
+        String finalContext = contextData != null ? contextData : ragService.retrieveRelevantContext(userQuery);
 
-        // Create RAG request
-        RagRequest ragRequest = new RagRequest(userQuery, relevantContext, sessionId);
+        // Create RAG request with context
+        RagRequest ragRequest = new RagRequest(userQuery, finalContext, sessionId);
 
         // Generate response using Gemini AI
         return geminiAiService.generateResponse(ragRequest)
@@ -85,7 +95,13 @@ public class ChatbotService {
 
         // Clean up old sessions (keep only last 100 sessions)
         if (sessionContexts.size() > 100) {
-            cleanupOldSessions();
+            long currentTime = System.currentTimeMillis();
+            long maxAge = 24 * 60 * 60 * 1000; // 24 hours
+
+            sessionContexts.entrySet().removeIf(entry ->
+                    currentTime - entry.getValue().getLastActivity() > maxAge);
+
+            log.info("Cleaned up old sessions. Current active sessions: {}", sessionContexts.size());
         }
     }
 
@@ -100,50 +116,10 @@ public class ChatbotService {
     }
 
     /**
-     * Check if the message is a special command
+     * Get session context for a specific session
      */
-    private boolean isSpecialCommand(String message) {
-        String lowerMessage = message.toLowerCase().trim();
-        return lowerMessage.equals("/help") ||
-               lowerMessage.equals("/services") ||
-               lowerMessage.equals("/locations") ||
-               lowerMessage.equals("/hours") ||
-               lowerMessage.equals("/contact");
-    }
-
-    /**
-     * Handle special commands with predefined responses
-     */
-    private Mono<ChatMessage> handleSpecialCommand(String command, String sessionId) {
-        String response;
-
-        switch (command.toLowerCase().trim()) {
-            case "/help":
-                response = getHelpMessage();
-                break;
-            case "/services":
-                response = getServicesMessage();
-                break;
-            case "/locations":
-                response = getLocationsMessage();
-                break;
-            case "/hours":
-                response = getHoursMessage();
-                break;
-            case "/contact":
-                response = getContactMessage();
-                break;
-            default:
-                response = "Unknown command. Type /help for available commands.";
-        }
-
-        return Mono.just(new ChatMessage(
-                ChatMessage.MessageType.BOT,
-                response,
-                sessionId,
-                System.currentTimeMillis(),
-                "command-response"
-        ));
+    public SessionContext getSessionContext(String sessionId) {
+        return sessionContexts.get(sessionId);
     }
 
     /**
@@ -157,7 +133,7 @@ public class ChatbotService {
                 "- Finding branch locations\n" +
                 "- Vehicle maintenance advice\n" +
                 "- Service status updates\n\n" +
-                "Feel free to ask me anything about our services, or type `/help` for quick commands!";
+                "Feel free to ask me anything about our services!";
 
         return new ChatMessage(
                 ChatMessage.MessageType.BOT,
@@ -169,77 +145,108 @@ public class ChatbotService {
     }
 
     /**
-     * Get session context for a specific session
+     * Get context data for data queries by calling backend APIs
      */
-    public SessionContext getSessionContext(String sessionId) {
-        return sessionContexts.get(sessionId);
-    }
+    private String getContextDataForQuery(String query, Long userId, String accessToken) {
+        StringBuilder contextData = new StringBuilder();
 
-    /**
-     * Clean up old sessions to prevent memory leaks
-     */
-    private void cleanupOldSessions() {
-        long currentTime = System.currentTimeMillis();
-        long maxAge = 24 * 60 * 60 * 1000; // 24 hours
+        try {
+            // Always include services data for context
+            List<ServiceDTO> services = backendApiService.getAllServices(accessToken);
+            if (services != null && !services.isEmpty()) {
+                contextData.append("SERVICES:\n");
+                for (ServiceDTO service : services) {
+                    contextData.append("- ").append(service.getName());
+                    if (service.getDescription() != null) {
+                        contextData.append(": ").append(service.getDescription());
+                    }
+                    if (service.getPrice() != null) {
+                        contextData.append(" (Price: $").append(service.getPrice()).append(")");
+                    }
+                    contextData.append("\n");
+                }
+                contextData.append("\n");
+            }
 
-        sessionContexts.entrySet().removeIf(entry ->
-                currentTime - entry.getValue().getLastActivity() > maxAge);
+            // Include branches data
+            List<BranchDTO> branches = backendApiService.getAllBranches(accessToken);
+            if (branches != null && !branches.isEmpty()) {
+                contextData.append("BRANCHES:\n");
+                for (BranchDTO branch : branches) {
+                    contextData.append("- ").append(branch.getName());
+                    if (branch.getAddress() != null) {
+                        contextData.append(" at ").append(branch.getAddress());
+                    }
+                    if (branch.getPhone() != null) {
+                        contextData.append(" (Phone: ").append(branch.getPhone()).append(")");
+                    }
+                    contextData.append("\n");
+                }
+                contextData.append("\n");
+            }
 
-        log.info("Cleaned up old sessions. Current active sessions: {}", sessionContexts.size());
-    }
+            // Include user-specific data if userId is available
+            if (userId != null) {
+                // User's vehicles
+                List<VehicleDTO> vehicles = backendApiService.getUserVehicles(userId, accessToken);
+                if (vehicles != null && !vehicles.isEmpty()) {
+                    contextData.append("USER VEHICLES:\n");
+                    for (VehicleDTO vehicle : vehicles) {
+                        contextData.append("- ").append(vehicle.getMake()).append(" ").append(vehicle.getModel());
+                        if (vehicle.getYear() != null) {
+                            contextData.append(" (").append(vehicle.getYear()).append(")");
+                        }
+                        if (vehicle.getPlateNumber() != null) {
+                            contextData.append(" - License: ").append(vehicle.getPlateNumber());
+                        }
+                        contextData.append("\n");
+                    }
+                    contextData.append("\n");
+                }
 
-    // Predefined response methods for special commands
+                // User's current tasks/services
+                List<TaskDTO> tasks = backendApiService.getCustomerTasks(userId, accessToken);
+                if (tasks != null && !tasks.isEmpty()) {
+                    contextData.append("CURRENT SERVICES:\n");
+                    for (TaskDTO task : tasks) {
+                        contextData.append("- Service ID ").append(task.id());
+                        if (task.title() != null) {
+                            contextData.append(": ").append(task.title());
+                        }
+                        if (task.status() != null) {
+                            contextData.append(" (Status: ").append(task.status()).append(")");
+                        }
+                        if (task.assignedEmployeeName() != null) {
+                            contextData.append(" - Assigned to: ").append(task.assignedEmployeeName());
+                        }
+                        contextData.append("\n");
+                    }
+                    contextData.append("\n");
+                }
+            }
 
-    private String getHelpMessage() {
-        return "🔧 **AxleXpert Help Commands**\n\n" +
-                "- `/services` - View our service offerings\n" +
-                "- `/locations` - Find our branch locations\n" +
-                "- `/hours` - See our operating hours\n" +
-                "- `/contact` - Get contact information\n\n" +
-                "You can also ask me natural questions like:\n" +
-                "- \"How much does an oil change cost?\"\n" +
-                "- \"What services do you offer?\"\n" +
-                "- \"Where is your nearest location?\"\n" +
-                "- \"How do I book an appointment?\"";
-    }
+            // Include managers data
+            List<UserDTO> managers = backendApiService.getAllManagers(accessToken);
+            if (managers != null && !managers.isEmpty()) {
+                contextData.append("MANAGERS:\n");
+                for (UserDTO manager : managers) {
+                    contextData.append("- ").append(manager.getUsername());
+                    if (manager.getEmail() != null) {
+                        contextData.append(" (Email: ").append(manager.getEmail()).append(")");
+                    }
+                    if (manager.getPhoneNumber() != null) {
+                        contextData.append(" (Phone: ").append(manager.getPhoneNumber()).append(")");
+                    }
+                    contextData.append("\n");
+                }
+                contextData.append("\n");
+            }
 
-    private String getServicesMessage() {
-        return "🔧 **Our Services**\n\n" +
-                "- **Oil Change** - From $30\n" +
-                "- **Brake Service** - From $80\n" +
-                "- **Tire Service** - From $50\n" +
-                "- **Engine Diagnostics** - From $100\n" +
-                "- **Transmission Service** - From $120\n" +
-                "- **AC Service** - From $70\n" +
-                "- **Battery Service** - From $90\n" +
-                "- **Electrical Diagnostics** - From $85\n\n" +
-                "For detailed information about any service, just ask!";
-    }
+            return contextData.toString();
 
-    private String getLocationsMessage() {
-        return "📍 **Our Locations**\n\n" +
-                "- **Downtown Branch** - 123 Main Street\n" +
-                "- **North Branch** - 456 Oak Avenue\n" +
-                "- **South Branch** - 789 Pine Road\n" +
-                "- **West Branch** - 321 Elm Street\n" +
-                "- **East Branch** - 654 Maple Drive\n\n" +
-                "All branches offer the same high-quality services!";
-    }
-
-    private String getHoursMessage() {
-        return "🕒 **Operating Hours**\n\n" +
-                "- **Monday - Friday**: 8:00 AM - 6:00 PM\n" +
-                "- **Saturday**: 9:00 AM - 4:00 PM\n" +
-                "- **Sunday**: Closed\n\n" +
-                "*Emergency services available 24/7!*";
-    }
-
-    private String getContactMessage() {
-        return "📞 **Contact Information**\n\n" +
-                "- **Phone**: 1-800-AXLEXPERT (1-800-295-3977)\n" +
-                "- **Email**: support@axlexpert.com\n" +
-                "- **Emergency**: 1-800-EMERGENCY\n" +
-                "- **Live Chat**: Available during business hours\n\n" +
-                "*We're here to help 24/7!*";
+        } catch (Exception e) {
+            log.error("Error getting context data for query: {}", e.getMessage());
+            return null;
+        }
     }
 }

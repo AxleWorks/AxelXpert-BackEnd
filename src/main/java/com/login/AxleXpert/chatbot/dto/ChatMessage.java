@@ -1,7 +1,7 @@
 package com.login.AxleXpert.chatbot.dto;
 
-import lombok.Data;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
@@ -39,6 +39,16 @@ public class ChatMessage {
     private String metadata;
 
     /**
+     * User ID for personalized queries (optional)
+     */
+    private Long userId;
+
+    /**
+     * Access token for API authentication (optional)
+     */
+    private String accessToken;
+
+    /**
      * Message types enum
      */
     public enum MessageType {
@@ -56,5 +66,27 @@ public class ChatMessage {
         this.content = content;
         this.sessionId = sessionId;
         this.timestamp = System.currentTimeMillis();
+    }
+
+    /**
+     * Constructor for bot messages with metadata
+     */
+    public ChatMessage(MessageType type, String content, String sessionId, long timestamp, String metadata) {
+        this.type = type;
+        this.content = content;
+        this.sessionId = sessionId;
+        this.timestamp = timestamp;
+        this.metadata = metadata;
+    }
+
+    /**
+     * Constructor for messages with user ID
+     */
+    public ChatMessage(MessageType type, String content, String sessionId, Long userId) {
+        this.type = type;
+        this.content = content;
+        this.sessionId = sessionId;
+        this.timestamp = System.currentTimeMillis();
+        this.userId = userId;
     }
 }
