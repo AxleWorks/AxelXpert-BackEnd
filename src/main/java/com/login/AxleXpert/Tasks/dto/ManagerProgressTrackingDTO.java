@@ -5,8 +5,7 @@ import java.util.List;
 
 import com.login.AxleXpert.common.enums.TaskStatus;
 
-// Used to provide comprehensive task tracking across the branch for management oversight.
-
+// DTO for manager's view of all tasks within their branch.
 public record ManagerProgressTrackingDTO(
     Long id,
     Long bookingId,
@@ -17,6 +16,7 @@ public record ManagerProgressTrackingDTO(
     String title,
     String description,
     TaskStatus status,
+    List<TechnicianNoteInfo> technicianNotes,
     List<String> progressPhotos,
     List<SubTaskDTO> subTasks,
     LocalDateTime startTime,
