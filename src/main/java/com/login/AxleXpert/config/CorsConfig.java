@@ -4,16 +4,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-@Configuration
+// @Configuration - Disabled: CORS is handled in SecurityConfig to avoid conflicts
 public class CorsConfig implements WebMvcConfigurer {
 
-    @Override
+    // @Override - Disabled: CORS is handled in SecurityConfig
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**")
-                .allowedOrigins("http://localhost:5173", "http://localhost:4173")
-                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
-                .allowCredentials(true)
-                .maxAge(3600);
+        // CORS configuration moved to SecurityConfig.java
+        // to ensure proper integration with Spring Security
     }
 }

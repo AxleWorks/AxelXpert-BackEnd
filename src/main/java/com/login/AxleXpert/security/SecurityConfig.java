@@ -53,15 +53,12 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // ✅ Define the CORS configuration here
-    @Bean
+    // ✅ Define the CORS configuration here    @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // Replace with your frontend URL
-        config.setAllowedOriginPatterns(List.of("*"));
-
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        // Specify allowed origins explicitly when credentials are enabled
+        config.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:4173"));        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Authorization"));
         config.setAllowCredentials(true);
 
