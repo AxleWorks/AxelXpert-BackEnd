@@ -1,5 +1,6 @@
 package com.login.AxleXpert.Tasks.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -10,10 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.login.AxleXpert.Services.entity.ServiceSubTask;
 import com.login.AxleXpert.Services.repository.ServiceSubTaskRepository;
-import com.login.AxleXpert.Users.entity.User;
-import com.login.AxleXpert.Users.repository.UserRepository;
-import com.login.AxleXpert.bookings.entity.Booking;
-import com.login.AxleXpert.bookings.repository.BookingRepository;
 import com.login.AxleXpert.Tasks.dto.CreateSubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.CreateTaskNoteDTO;
 import com.login.AxleXpert.Tasks.dto.EmployeeTaskDTO;
@@ -33,6 +30,12 @@ import com.login.AxleXpert.Tasks.repository.SubTaskRepository;
 import com.login.AxleXpert.Tasks.repository.TaskImageRepository;
 import com.login.AxleXpert.Tasks.repository.TaskNoteRepository;
 import com.login.AxleXpert.Tasks.repository.TaskRepository;
+import com.login.AxleXpert.Users.entity.User;
+import com.login.AxleXpert.Users.repository.UserRepository;
+import com.login.AxleXpert.Vehicals.entity.Vehicle;
+import com.login.AxleXpert.Vehicals.repository.VehicleRepository;
+import com.login.AxleXpert.bookings.entity.Booking;
+import com.login.AxleXpert.bookings.repository.BookingRepository;
 import com.login.AxleXpert.common.enums.NoteType;
 import com.login.AxleXpert.common.enums.TaskStatus;
 
@@ -47,6 +50,7 @@ public class TaskService {
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
     private final ServiceSubTaskRepository serviceSubTaskRepository;
+    private final VehicleRepository vehicleRepository;
 
     public TaskService(TaskRepository taskRepository, 
                       SubTaskRepository subTaskRepository,
@@ -54,7 +58,8 @@ public class TaskService {
                       TaskImageRepository taskImageRepository,
                       BookingRepository bookingRepository, 
                       UserRepository userRepository,
-                      ServiceSubTaskRepository serviceSubTaskRepository) {
+                      ServiceSubTaskRepository serviceSubTaskRepository,
+                      VehicleRepository vehicleRepository) {
         this.taskRepository = taskRepository;
         this.subTaskRepository = subTaskRepository;
         this.taskNoteRepository = taskNoteRepository;
@@ -62,6 +67,7 @@ public class TaskService {
         this.bookingRepository = bookingRepository;
         this.userRepository = userRepository;
         this.serviceSubTaskRepository = serviceSubTaskRepository;
+        this.vehicleRepository = vehicleRepository;
     }
 
     /**
@@ -180,6 +186,11 @@ public class TaskService {
         
         if (updateTaskDTO.status() != null) {
             task.setStatus(updateTaskDTO.status());
+            
+            // Update vehicle's last service date if task is completed
+            if (updateTaskDTO.status() == TaskStatus.COMPLETED) {
+                updateVehicleLastServiceDate(task);
+            }
         }
         if (updateTaskDTO.startTime() != null) {
             task.setSheduledTime(updateTaskDTO.startTime());
@@ -344,8 +355,15 @@ public class TaskService {
 
     private void updateParentTaskStatus(Task task) {
         TaskStatus calculatedStatus = task.calculateOverallStatus();
+        TaskStatus previousStatus = task.getStatus();
+        
         task.setStatus(calculatedStatus);
         taskRepository.save(task);
+        
+        // Update vehicle's last service date if task became completed
+        if (calculatedStatus == TaskStatus.COMPLETED && previousStatus != TaskStatus.COMPLETED) {
+            updateVehicleLastServiceDate(task);
+        }
     }
 
     private TaskDTO toTaskDTO(Task task) {
@@ -479,5 +497,35 @@ public class TaskService {
                 taskImage.getDescription(),
                 taskImage.getCreatedAt()
         );
+    }
+
+    /**
+     * Update the vehicle's last service date when a task is completed
+     */
+    private void updateVehicleLastServiceDate(Task task) {
+        try {
+            // Get the booking's vehicle information
+            String vehicleInfo = task.getBooking().getVehicle();
+            if (vehicleInfo == null || vehicleInfo.trim().isEmpty()) {
+                return; // No vehicle information available
+            }
+
+            // Try to find the vehicle by plate number
+            // Assuming the vehicle field contains the plate number
+            Optional<Vehicle> vehicleOpt = 
+                vehicleRepository.findByPlateNumber(vehicleInfo.trim());
+            
+            if (vehicleOpt.isPresent()) {
+                Vehicle vehicle = vehicleOpt.get();
+                vehicle.setLastServiceDate(LocalDate.now());
+                vehicleRepository.save(vehicle);
+            }
+            // If vehicle not found by plate number, we could try other matching logic
+            // For now, we'll silently skip if not found
+            
+        } catch (Exception e) {
+            // Log error but don't fail the task update
+            System.err.println("Error updating vehicle last service date: " + e.getMessage());
+        }
     }
 }
