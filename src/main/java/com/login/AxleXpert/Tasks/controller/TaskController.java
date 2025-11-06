@@ -20,7 +20,7 @@ import com.login.AxleXpert.Tasks.dto.CreateSubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.CreateTaskImageDTO;
 import com.login.AxleXpert.Tasks.dto.CreateTaskNoteDTO;
 import com.login.AxleXpert.Tasks.dto.EmployeeTaskDTO;
-import com.login.AxleXpert.Tasks.dto.ProgressTrackingDTO;
+import com.login.AxleXpert.Tasks.dto.UserProgressTrackingDTO;
 import com.login.AxleXpert.Tasks.dto.SubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.TaskDTO;
 import com.login.AxleXpert.Tasks.dto.TaskImageDTO;
@@ -57,8 +57,8 @@ public class TaskController {
 
     //New endpoint for Customer Progress Tracking Feature
     @GetMapping("/customer/{customerId}/progress-tracking")
-    public ResponseEntity<List<ProgressTrackingDTO>> getCustomerProgressTracking(@PathVariable Long customerId) {
-        List<ProgressTrackingDTO> tasks = taskService.getTasksForCustomerProgressTracking(customerId);
+    public ResponseEntity<List<UserProgressTrackingDTO>> getCustomerProgressTracking(@PathVariable Long customerId) {
+        List<UserProgressTrackingDTO> tasks = taskService.getTasksForCustomerProgressTracking(customerId);
         return ResponseEntity.ok(tasks);
     }
 

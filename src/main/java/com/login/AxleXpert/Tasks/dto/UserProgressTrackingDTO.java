@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.login.AxleXpert.common.enums.TaskStatus;
 
-public record ProgressTrackingDTO(
+public record UserProgressTrackingDTO(
     Long id,  
     String customerName, 
     String vehicle,

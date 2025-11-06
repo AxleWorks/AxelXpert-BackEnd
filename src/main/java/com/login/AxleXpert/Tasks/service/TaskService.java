@@ -17,7 +17,7 @@ import com.login.AxleXpert.bookings.repository.BookingRepository;
 import com.login.AxleXpert.Tasks.dto.CreateSubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.CreateTaskNoteDTO;
 import com.login.AxleXpert.Tasks.dto.EmployeeTaskDTO;
-import com.login.AxleXpert.Tasks.dto.ProgressTrackingDTO;
+import com.login.AxleXpert.Tasks.dto.UserProgressTrackingDTO;
 import com.login.AxleXpert.Tasks.dto.SubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.TaskDTO;
 import com.login.AxleXpert.Tasks.dto.TaskImageDTO;
@@ -140,7 +140,7 @@ public class TaskService {
 
     // New method for Customer Progress Tracking Feature
     @Transactional(readOnly = true)
-    public List<ProgressTrackingDTO> getTasksForCustomerProgressTracking(Long customerId) {
+    public List<UserProgressTrackingDTO> getTasksForCustomerProgressTracking(Long customerId) {
         List<Task> tasks = taskRepository.findByCustomerId(customerId);
         
         return tasks.stream()
@@ -408,7 +408,7 @@ public class TaskService {
     }
 
     // Converts a Task entity to ProgressTrackingDTO.
-    private ProgressTrackingDTO toProgressTrackingDTO(Task task) {
+    private UserProgressTrackingDTO toProgressTrackingDTO(Task task) {
         List<TechnicianNoteInfo> technicianNotes = task.getTaskNotes().stream()
                 .filter(note -> note.getNoteType() == NoteType.EMPLOYEE_NOTE)
                 .sorted((n1, n2) -> n1.getCreatedAt().compareTo(n2.getCreatedAt())) // oldest first
@@ -427,7 +427,7 @@ public class TaskService {
                 .map(this::toSubTaskDTO)
                 .collect(Collectors.toList());
         
-        return new ProgressTrackingDTO(
+        return new UserProgressTrackingDTO(
                 task.getId(),
                 task.getBooking().getCustomerName(),
                 task.getBooking().getVehicle(),

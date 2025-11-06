@@ -11,7 +11,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.login.AxleXpert.Branches.dto.BranchDTO;
 import com.login.AxleXpert.Services.dto.ServiceDTO;
-import com.login.AxleXpert.Tasks.dto.ProgressTrackingDTO;
+import com.login.AxleXpert.Tasks.dto.UserProgressTrackingDTO;
 import com.login.AxleXpert.Tasks.dto.TaskDTO;
 import com.login.AxleXpert.Users.dto.UserDTO;
 import com.login.AxleXpert.Vehicals.dto.VehicleDTO;
@@ -158,17 +158,17 @@ public class BackendApiService {
     /**
      * Get customer's progress tracking
      */
-    public List<ProgressTrackingDTO> getCustomerProgressTracking(Long customerId, String accessToken) {
+    public List<UserProgressTrackingDTO> getCustomerProgressTracking(Long customerId, String accessToken) {
         try {
             String url = baseUrl + "/api/tasks/customer/" + customerId + "/progress-tracking";
             org.springframework.http.HttpHeaders headers = createHeaders(accessToken);
             org.springframework.http.HttpEntity<String> entity = new org.springframework.http.HttpEntity<>(headers);
 
-            ResponseEntity<List<ProgressTrackingDTO>> response = restTemplate.exchange(
+            ResponseEntity<List<UserProgressTrackingDTO>> response = restTemplate.exchange(
                 url,
                 HttpMethod.GET,
                 entity,
-                new ParameterizedTypeReference<List<ProgressTrackingDTO>>() {}
+                new ParameterizedTypeReference<List<UserProgressTrackingDTO>>() {}
             );
             return response.getBody();
         } catch (Exception e) {
