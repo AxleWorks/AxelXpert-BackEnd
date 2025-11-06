@@ -17,6 +17,7 @@ import com.login.AxleXpert.bookings.repository.BookingRepository;
 import com.login.AxleXpert.Tasks.dto.CreateSubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.CreateTaskNoteDTO;
 import com.login.AxleXpert.Tasks.dto.EmployeeTaskDTO;
+import com.login.AxleXpert.Tasks.dto.ManagerProgressTrackingDTO;
 import com.login.AxleXpert.Tasks.dto.UserProgressTrackingDTO;
 import com.login.AxleXpert.Tasks.dto.SubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.TaskDTO;
@@ -145,6 +146,30 @@ public class TaskService {
         
         return tasks.stream()
                 .map(this::toProgressTrackingDTO)
+                .collect(Collectors.toList());
+    }
+
+    // New method for Manager Progress Tracking Feature
+    @Transactional(readOnly = true)
+    public List<ManagerProgressTrackingDTO> getTasksForManagerProgressTracking(Long managerId) {
+        // First get the manager's branch ID
+        Optional<User> managerOpt = userRepository.findById(managerId);
+        if (managerOpt.isEmpty()) {
+            throw new IllegalArgumentException("Manager not found with id: " + managerId);
+        }
+        
+        User manager = managerOpt.get();
+        if (manager.getBranch() == null) {
+            throw new IllegalArgumentException("Manager has no assigned branch");
+        }
+        
+        Long branchId = manager.getBranch().getId();
+        
+        // Get all tasks for employees in this branch
+        List<Task> tasks = taskRepository.findByBranchId(branchId);
+        
+        return tasks.stream()
+                .map(this::toManagerProgressTrackingDTO)
                 .collect(Collectors.toList());
     }
 
@@ -440,6 +465,45 @@ public class TaskService {
                 subTasks,
                 task.getStartTime(),       
                 task.getCompletedTime(),    
+                task.getUpdatedAt()
+        );
+    }
+
+    // Converts a Task entity to ManagerProgressTrackingDTO
+    private ManagerProgressTrackingDTO toManagerProgressTrackingDTO(Task task) {
+        // Reuse the same logic for technician notes
+        List<TechnicianNoteInfo> technicianNotes = task.getTaskNotes().stream()
+                .filter(note -> note.getNoteType() == NoteType.EMPLOYEE_NOTE)
+                .sorted((n1, n2) -> n1.getCreatedAt().compareTo(n2.getCreatedAt())) // oldest first
+                .map(note -> new TechnicianNoteInfo(
+                        note.getContent(),
+                        note.getCreatedAt()
+                ))
+                .collect(Collectors.toList());
+        
+        List<String> progressPhotos = task.getTaskImages().stream()
+                .map(TaskImage::getImageUrl)
+                .collect(Collectors.toList());
+        
+        List<SubTaskDTO> subTasks = task.getSubTasks().stream()
+                .map(this::toSubTaskDTO)
+                .collect(Collectors.toList());
+        
+        return new ManagerProgressTrackingDTO(
+                task.getId(),
+                task.getBooking().getId(),  // Booking ID
+                task.getBooking().getCustomerName(),
+                task.getBooking().getVehicle(),
+                task.getAssignedEmployee().getUsername(),  // Assigned employee name
+                task.getBooking().getService().getDurationMinutes(),
+                task.getTitle(),
+                task.getDescription(),
+                task.getStatus(),
+                technicianNotes,
+                progressPhotos,
+                subTasks,
+                task.getStartTime(),
+                task.getCompletedTime(),
                 task.getUpdatedAt()
         );
     }
