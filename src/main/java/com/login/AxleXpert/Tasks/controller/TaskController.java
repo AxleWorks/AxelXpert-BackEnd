@@ -20,6 +20,7 @@ import com.login.AxleXpert.Tasks.dto.CreateSubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.CreateTaskImageDTO;
 import com.login.AxleXpert.Tasks.dto.CreateTaskNoteDTO;
 import com.login.AxleXpert.Tasks.dto.EmployeeTaskDTO;
+import com.login.AxleXpert.Tasks.dto.ManagerProgressTrackingDTO;
 import com.login.AxleXpert.Tasks.dto.UserProgressTrackingDTO;
 import com.login.AxleXpert.Tasks.dto.SubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.TaskDTO;
@@ -60,6 +61,18 @@ public class TaskController {
     public ResponseEntity<List<UserProgressTrackingDTO>> getCustomerProgressTracking(@PathVariable Long customerId) {
         List<UserProgressTrackingDTO> tasks = taskService.getTasksForCustomerProgressTracking(customerId);
         return ResponseEntity.ok(tasks);
+    }
+
+    //New endpoint for Manager Progress Tracking Feature
+    @GetMapping("/manager/{managerId}/progress-tracking")
+    public ResponseEntity<?> getManagerProgressTracking(@PathVariable Long managerId) {
+        try {
+            List<ManagerProgressTrackingDTO> tasks = taskService.getTasksForManagerProgressTracking(managerId);
+            return ResponseEntity.ok(tasks);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ErrorResponse(e.getMessage()));
+        }
     }
 
     @GetMapping("/{taskId}")
