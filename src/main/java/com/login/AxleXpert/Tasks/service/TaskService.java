@@ -1,5 +1,6 @@
 package com.login.AxleXpert.Tasks.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -10,14 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.login.AxleXpert.Services.entity.ServiceSubTask;
 import com.login.AxleXpert.Services.repository.ServiceSubTaskRepository;
-import com.login.AxleXpert.Users.entity.User;
-import com.login.AxleXpert.Users.repository.UserRepository;
-import com.login.AxleXpert.bookings.entity.Booking;
-import com.login.AxleXpert.bookings.repository.BookingRepository;
 import com.login.AxleXpert.Tasks.dto.CreateSubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.CreateTaskNoteDTO;
 import com.login.AxleXpert.Tasks.dto.EmployeeTaskDTO;
-import com.login.AxleXpert.Tasks.dto.ProgressTrackingDTO;
+import com.login.AxleXpert.Tasks.dto.ManagerProgressTrackingDTO;
+import com.login.AxleXpert.Tasks.dto.UserProgressTrackingDTO;
 import com.login.AxleXpert.Tasks.dto.SubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.TaskDTO;
 import com.login.AxleXpert.Tasks.dto.TaskImageDTO;
@@ -33,6 +31,12 @@ import com.login.AxleXpert.Tasks.repository.SubTaskRepository;
 import com.login.AxleXpert.Tasks.repository.TaskImageRepository;
 import com.login.AxleXpert.Tasks.repository.TaskNoteRepository;
 import com.login.AxleXpert.Tasks.repository.TaskRepository;
+import com.login.AxleXpert.Users.entity.User;
+import com.login.AxleXpert.Users.repository.UserRepository;
+import com.login.AxleXpert.Vehicals.entity.Vehicle;
+import com.login.AxleXpert.Vehicals.repository.VehicleRepository;
+import com.login.AxleXpert.bookings.entity.Booking;
+import com.login.AxleXpert.bookings.repository.BookingRepository;
 import com.login.AxleXpert.common.enums.NoteType;
 import com.login.AxleXpert.common.enums.TaskStatus;
 import com.login.AxleXpert.notifications.service.NotificationService;
@@ -144,11 +148,35 @@ public class TaskService {
 
     // New method for Customer Progress Tracking Feature
     @Transactional(readOnly = true)
-    public List<ProgressTrackingDTO> getTasksForCustomerProgressTracking(Long customerId) {
+    public List<UserProgressTrackingDTO> getTasksForCustomerProgressTracking(Long customerId) {
         List<Task> tasks = taskRepository.findByCustomerId(customerId);
         
         return tasks.stream()
                 .map(this::toProgressTrackingDTO)
+                .collect(Collectors.toList());
+    }
+
+    // New method for Manager Progress Tracking Feature
+    @Transactional(readOnly = true)
+    public List<ManagerProgressTrackingDTO> getTasksForManagerProgressTracking(Long managerId) {
+        // First get the manager's branch ID
+        Optional<User> managerOpt = userRepository.findById(managerId);
+        if (managerOpt.isEmpty()) {
+            throw new IllegalArgumentException("Manager not found with id: " + managerId);
+        }
+        
+        User manager = managerOpt.get();
+        if (manager.getBranch() == null) {
+            throw new IllegalArgumentException("Manager has no assigned branch");
+        }
+        
+        Long branchId = manager.getBranch().getId();
+        
+        // Get all tasks for employees in this branch
+        List<Task> tasks = taskRepository.findByBranchId(branchId);
+        
+        return tasks.stream()
+                .map(this::toManagerProgressTrackingDTO)
                 .collect(Collectors.toList());
     }
 
@@ -184,6 +212,11 @@ public class TaskService {
         
         if (updateTaskDTO.status() != null) {
             task.setStatus(updateTaskDTO.status());
+            
+            // Update vehicle's last service date if task is completed
+            if (updateTaskDTO.status() == TaskStatus.COMPLETED) {
+                updateVehicleLastServiceDate(task);
+            }
         }
         if (updateTaskDTO.startTime() != null) {
             task.setSheduledTime(updateTaskDTO.startTime());
@@ -350,8 +383,15 @@ public class TaskService {
 
     private void updateParentTaskStatus(Task task) {
         TaskStatus calculatedStatus = task.calculateOverallStatus();
+        TaskStatus previousStatus = task.getStatus();
+        
         task.setStatus(calculatedStatus);
         taskRepository.save(task);
+        
+        // Update vehicle's last service date if task became completed
+        if (calculatedStatus == TaskStatus.COMPLETED && previousStatus != TaskStatus.COMPLETED) {
+            updateVehicleLastServiceDate(task);
+        }
     }
 
     private TaskDTO toTaskDTO(Task task) {
@@ -414,7 +454,7 @@ public class TaskService {
     }
 
     // Converts a Task entity to ProgressTrackingDTO.
-    private ProgressTrackingDTO toProgressTrackingDTO(Task task) {
+    private UserProgressTrackingDTO toProgressTrackingDTO(Task task) {
         List<TechnicianNoteInfo> technicianNotes = task.getTaskNotes().stream()
                 .filter(note -> note.getNoteType() == NoteType.EMPLOYEE_NOTE)
                 .sorted((n1, n2) -> n1.getCreatedAt().compareTo(n2.getCreatedAt())) // oldest first
@@ -433,7 +473,7 @@ public class TaskService {
                 .map(this::toSubTaskDTO)
                 .collect(Collectors.toList());
         
-        return new ProgressTrackingDTO(
+        return new UserProgressTrackingDTO(
                 task.getId(),
                 task.getBooking().getCustomerName(),
                 task.getBooking().getVehicle(),
@@ -446,6 +486,45 @@ public class TaskService {
                 subTasks,
                 task.getStartTime(),       
                 task.getCompletedTime(),    
+                task.getUpdatedAt()
+        );
+    }
+
+    // Converts a Task entity to ManagerProgressTrackingDTO
+    private ManagerProgressTrackingDTO toManagerProgressTrackingDTO(Task task) {
+        // Reuse the same logic for technician notes
+        List<TechnicianNoteInfo> technicianNotes = task.getTaskNotes().stream()
+                .filter(note -> note.getNoteType() == NoteType.EMPLOYEE_NOTE)
+                .sorted((n1, n2) -> n1.getCreatedAt().compareTo(n2.getCreatedAt())) // oldest first
+                .map(note -> new TechnicianNoteInfo(
+                        note.getContent(),
+                        note.getCreatedAt()
+                ))
+                .collect(Collectors.toList());
+        
+        List<String> progressPhotos = task.getTaskImages().stream()
+                .map(TaskImage::getImageUrl)
+                .collect(Collectors.toList());
+        
+        List<SubTaskDTO> subTasks = task.getSubTasks().stream()
+                .map(this::toSubTaskDTO)
+                .collect(Collectors.toList());
+        
+        return new ManagerProgressTrackingDTO(
+                task.getId(),
+                task.getBooking().getId(),  // Booking ID
+                task.getBooking().getCustomerName(),
+                task.getBooking().getVehicle(),
+                task.getAssignedEmployee().getUsername(),  // Assigned employee name
+                task.getBooking().getService().getDurationMinutes(),
+                task.getTitle(),
+                task.getDescription(),
+                task.getStatus(),
+                technicianNotes,
+                progressPhotos,
+                subTasks,
+                task.getStartTime(),
+                task.getCompletedTime(),
                 task.getUpdatedAt()
         );
     }
@@ -485,5 +564,35 @@ public class TaskService {
                 taskImage.getDescription(),
                 taskImage.getCreatedAt()
         );
+    }
+
+    /**
+     * Update the vehicle's last service date when a task is completed
+     */
+    private void updateVehicleLastServiceDate(Task task) {
+        try {
+            // Get the booking's vehicle information
+            String vehicleInfo = task.getBooking().getVehicle();
+            if (vehicleInfo == null || vehicleInfo.trim().isEmpty()) {
+                return; // No vehicle information available
+            }
+
+            // Try to find the vehicle by plate number
+            // Assuming the vehicle field contains the plate number
+            Optional<Vehicle> vehicleOpt = 
+                vehicleRepository.findByPlateNumber(vehicleInfo.trim());
+            
+            if (vehicleOpt.isPresent()) {
+                Vehicle vehicle = vehicleOpt.get();
+                vehicle.setLastServiceDate(LocalDate.now());
+                vehicleRepository.save(vehicle);
+            }
+            // If vehicle not found by plate number, we could try other matching logic
+            // For now, we'll silently skip if not found
+            
+        } catch (Exception e) {
+            // Log error but don't fail the task update
+            System.err.println("Error updating vehicle last service date: " + e.getMessage());
+        }
     }
 }

@@ -60,4 +60,12 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     @Query("SELECT t FROM Task t WHERE t.assignedEmployee.id = :employeeId ORDER BY t.createdAt DESC")
     List<Task> findByAssignedEmployeeIdOrderByCreatedAtDesc(@Param("employeeId") Long employeeId);
+
+    @Query("SELECT t FROM Task t " +
+           "LEFT JOIN FETCH t.booking b " +
+           "LEFT JOIN FETCH b.service " +
+           "LEFT JOIN FETCH b.customer " +
+           "LEFT JOIN FETCH t.assignedEmployee " +
+           "WHERE t.assignedEmployee.branch.id = :branchId")
+    List<Task> findByBranchId(@Param("branchId") Long branchId);
 }
