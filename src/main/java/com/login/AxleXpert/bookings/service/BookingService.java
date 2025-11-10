@@ -16,6 +16,7 @@ import com.login.AxleXpert.bookings.dto.BookingDTO;
 import com.login.AxleXpert.bookings.entity.Booking;
 import com.login.AxleXpert.bookings.repository.BookingRepository;
 import com.login.AxleXpert.common.enums.BookingStatus;
+import com.login.AxleXpert.notifications.service.NotificationService;
 
 @Service
 @Transactional
@@ -26,14 +27,16 @@ public class BookingService {
     private final TaskService taskService;
     private final BranchRepository branchRepository;
     private final ServiceRepository serviceRepository;
+    private final NotificationService notificationService;
 
     public BookingService(BookingRepository bookingRepository, UserRepository userRepository, TaskService taskService,
-                          BranchRepository branchRepository, ServiceRepository serviceRepository) {
+                          BranchRepository branchRepository, ServiceRepository serviceRepository, NotificationService notificationService) {
         this.bookingRepository = bookingRepository;
         this.userRepository = userRepository;
         this.taskService = taskService;
         this.branchRepository = branchRepository;
         this.serviceRepository = serviceRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional(readOnly = true)
@@ -93,6 +96,8 @@ public class BookingService {
         Booking savedBooking = bookingRepository.save(booking);
         
         taskService.createTaskForBooking(bookingId, employeeId);
+  
+        notificationService.createAndSendNotification(employeeId, "New Task Assigned", "You have been assigned a new task!.", "EMPLOYEE");
         
         return Optional.of(toDto(savedBooking));
     }

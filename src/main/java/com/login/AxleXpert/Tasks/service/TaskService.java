@@ -39,6 +39,7 @@ import com.login.AxleXpert.bookings.entity.Booking;
 import com.login.AxleXpert.bookings.repository.BookingRepository;
 import com.login.AxleXpert.common.enums.NoteType;
 import com.login.AxleXpert.common.enums.TaskStatus;
+import com.login.AxleXpert.notifications.service.NotificationService;
 
 @Service
 @Transactional
@@ -51,7 +52,7 @@ public class TaskService {
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
     private final ServiceSubTaskRepository serviceSubTaskRepository;
-    private final VehicleRepository vehicleRepository;
+    private final NotificationService notificationService;
 
     public TaskService(TaskRepository taskRepository, 
                       SubTaskRepository subTaskRepository,
@@ -60,7 +61,7 @@ public class TaskService {
                       BookingRepository bookingRepository, 
                       UserRepository userRepository,
                       ServiceSubTaskRepository serviceSubTaskRepository,
-                      VehicleRepository vehicleRepository) {
+                      NotificationService notificationService) {
         this.taskRepository = taskRepository;
         this.subTaskRepository = subTaskRepository;
         this.taskNoteRepository = taskNoteRepository;
@@ -68,7 +69,7 @@ public class TaskService {
         this.bookingRepository = bookingRepository;
         this.userRepository = userRepository;
         this.serviceSubTaskRepository = serviceSubTaskRepository;
-        this.vehicleRepository = vehicleRepository;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -256,8 +257,10 @@ public class TaskService {
         if (subTaskOpt.isEmpty()) {
             throw new IllegalArgumentException("SubTask not found with id: " + subTaskId);
         }
-
         SubTask subTask = subTaskOpt.get();
+
+        Long customerId = subTask.getTask().getBooking().getCustomer().getId();
+        notificationService.createAndSendNotification(customerId, "Service Subtask Update", "The subtask '" + subTask.getTitle() + "' has been updated. Take a look at the progress!", "CUSTOMER");
         
         if (updateSubTaskDTO.title() != null) {
             subTask.setTitle(updateSubTaskDTO.title());
