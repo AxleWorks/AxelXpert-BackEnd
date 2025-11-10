@@ -21,13 +21,13 @@ import com.login.AxleXpert.Tasks.dto.CreateTaskImageDTO;
 import com.login.AxleXpert.Tasks.dto.CreateTaskNoteDTO;
 import com.login.AxleXpert.Tasks.dto.EmployeeTaskDTO;
 import com.login.AxleXpert.Tasks.dto.ManagerProgressTrackingDTO;
-import com.login.AxleXpert.Tasks.dto.UserProgressTrackingDTO;
 import com.login.AxleXpert.Tasks.dto.SubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.TaskDTO;
 import com.login.AxleXpert.Tasks.dto.TaskImageDTO;
 import com.login.AxleXpert.Tasks.dto.TaskNoteDTO;
 import com.login.AxleXpert.Tasks.dto.UpdateSubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.UpdateTaskDTO;
+import com.login.AxleXpert.Tasks.dto.UserProgressTrackingDTO;
 import com.login.AxleXpert.Tasks.service.TaskService;
 import com.login.AxleXpert.common.dto.ErrorResponse;
 import com.login.AxleXpert.common.enums.NoteType;
@@ -73,6 +73,13 @@ public class TaskController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ErrorResponse(e.getMessage()));
         }
+    }
+
+    //New endpoint for Admin Progress Tracking Feature
+    @GetMapping("/admin/progress-tracking")
+    public ResponseEntity<List<ManagerProgressTrackingDTO>> getAdminProgressTracking() {
+        List<ManagerProgressTrackingDTO> tasks = taskService.getTasksForAdminProgressTracking();
+        return ResponseEntity.ok(tasks);
     }
 
     @GetMapping("/{taskId}")

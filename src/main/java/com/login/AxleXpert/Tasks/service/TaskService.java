@@ -15,7 +15,6 @@ import com.login.AxleXpert.Tasks.dto.CreateSubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.CreateTaskNoteDTO;
 import com.login.AxleXpert.Tasks.dto.EmployeeTaskDTO;
 import com.login.AxleXpert.Tasks.dto.ManagerProgressTrackingDTO;
-import com.login.AxleXpert.Tasks.dto.UserProgressTrackingDTO;
 import com.login.AxleXpert.Tasks.dto.SubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.TaskDTO;
 import com.login.AxleXpert.Tasks.dto.TaskImageDTO;
@@ -23,6 +22,7 @@ import com.login.AxleXpert.Tasks.dto.TaskNoteDTO;
 import com.login.AxleXpert.Tasks.dto.TechnicianNoteInfo;
 import com.login.AxleXpert.Tasks.dto.UpdateSubTaskDTO;
 import com.login.AxleXpert.Tasks.dto.UpdateTaskDTO;
+import com.login.AxleXpert.Tasks.dto.UserProgressTrackingDTO;
 import com.login.AxleXpert.Tasks.entity.SubTask;
 import com.login.AxleXpert.Tasks.entity.Task;
 import com.login.AxleXpert.Tasks.entity.TaskImage;
@@ -52,6 +52,7 @@ public class TaskService {
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
     private final ServiceSubTaskRepository serviceSubTaskRepository;
+    private final VehicleRepository vehicleRepository;
     private final NotificationService notificationService;
 
     public TaskService(TaskRepository taskRepository, 
@@ -61,6 +62,7 @@ public class TaskService {
                       BookingRepository bookingRepository, 
                       UserRepository userRepository,
                       ServiceSubTaskRepository serviceSubTaskRepository,
+                      VehicleRepository vehicleRepository,
                       NotificationService notificationService) {
         this.taskRepository = taskRepository;
         this.subTaskRepository = subTaskRepository;
@@ -69,6 +71,7 @@ public class TaskService {
         this.bookingRepository = bookingRepository;
         this.userRepository = userRepository;
         this.serviceSubTaskRepository = serviceSubTaskRepository;
+        this.vehicleRepository = vehicleRepository;
         this.notificationService = notificationService;
     }
 
@@ -174,6 +177,17 @@ public class TaskService {
         
         // Get all tasks for employees in this branch
         List<Task> tasks = taskRepository.findByBranchId(branchId);
+        
+        return tasks.stream()
+                .map(this::toManagerProgressTrackingDTO)
+                .collect(Collectors.toList());
+    }
+
+    // New method for Admin Progress Tracking Feature
+    @Transactional(readOnly = true)
+    public List<ManagerProgressTrackingDTO> getTasksForAdminProgressTracking() {
+        // Get all tasks across all branches
+        List<Task> tasks = taskRepository.findAll();
         
         return tasks.stream()
                 .map(this::toManagerProgressTrackingDTO)
