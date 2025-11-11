@@ -17,7 +17,7 @@ public class CheckController {
         return ResponseEntity.ok("Authentication service is running");
     }
 
-    @GetMapping("/health")
+    @GetMapping("api/health")
      public ResponseEntity<?> health() {
         return ResponseEntity.ok(checkService.health());
     }

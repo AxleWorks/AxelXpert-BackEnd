@@ -1,0 +1,156 @@
+AxleXpert Vehicle Service System Knowledge Base
+
+ABOUT AXLEXPERT:
+AxleXpert is a comprehensive vehicle service management system that helps customers book vehicle services, track service status, and manage their automotive needs efficiently.
+
+SERVICES OFFERED:
+1. Oil Change - Regular engine oil replacement service starting from $30
+2. Brake Service - Complete brake inspection and repair from $80
+3. Tire Service - Tire rotation, replacement, and balancing from $50
+4. Engine Diagnostics - Computer diagnostics and engine troubleshooting from $100
+5. Transmission Service - Transmission fluid change and inspection from $120
+6. AC Service - Air conditioning repair and maintenance from $70
+7. Battery Service - Battery testing and replacement from $90
+8. Electrical Diagnostics - Electrical system inspection and repair from $85
+9. Suspension Service - Shock absorber and strut service from $150
+10. Exhaust System Repair - Muffler and exhaust pipe repair from $110
+
+BOOKING PROCESS:
+1. Create an account or log in to your existing account
+2. Select the type of service you need
+3. Choose your preferred branch location
+4. Select available date and time slot
+5. Provide vehicle details (make, model, year, license plate)
+6. Confirm booking and receive confirmation email
+7. Arrive at the scheduled time with your vehicle
+
+BRANCHES AND LOCATIONS:
+- Downtown Branch: 123 Main Street, Downtown Area
+- North Branch: 456 Oak Avenue, North District
+- South Branch: 789 Pine Road, South Side
+- West Branch: 321 Elm Street, West End
+- East Branch: 654 Maple Drive, East Side
+
+OPERATING HOURS:
+Monday to Friday: 8:00 AM - 6:00 PM
+Saturday: 9:00 AM - 4:00 PM
+Sunday: Closed
+
+PAYMENT METHODS:
+- Credit Cards (Visa, MasterCard, American Express)
+- Debit Cards
+- Cash payments accepted at service location
+- Online payment through secure gateway
+
+SERVICE STATUS TRACKING:
+Customers can track their service status through:
+1. Online portal - Log in to check real-time updates
+2. SMS notifications - Receive updates via text messages
+3. Email updates - Get detailed status reports
+4. Phone support - Call customer service for updates
+
+VEHICLE TYPES SUPPORTED:
+- Passenger Cars (Sedan, Hatchback, SUV)
+- Light Commercial Vehicles
+- Motorcycles and Scooters
+- Hybrid and Electric Vehicles
+- Trucks (up to certain tonnage limits)
+
+COMMON MAINTENANCE SCHEDULES:
+- Oil Change: Every 3,000-5,000 miles or 3-6 months
+- Brake Inspection: Every 12,000 miles or annually
+- Tire Rotation: Every 5,000-7,500 miles
+- Engine Diagnostics: When warning lights appear
+- Transmission Service: Every 30,000-60,000 miles
+- AC Service: Before summer season or when not cooling properly
+- Battery Check: Every 6 months or before extreme weather
+
+EMERGENCY SERVICES:
+- Roadside Assistance: 24/7 emergency support
+- Towing Service: Available to nearest AxleXpert branch
+- Emergency Repairs: Priority booking for urgent issues
+- Mobile Service: On-site service for certain repairs
+
+CUSTOMER SUPPORT:
+- Phone: 1-800-AXLEXPERT (1-800-295-3977)
+- Email: support@axlexpert.com
+- Live Chat: Available on website during business hours
+- Emergency Hotline: 1-800-EMERGENCY
+
+WARRANTY AND GUARANTEES:
+- All services come with 90-day warranty
+- Parts warranty varies by manufacturer
+- Labor warranty: 30 days from service completion
+- Customer satisfaction guarantee
+
+MEMBERSHIP BENEFITS:
+- Regular customers get 10% discount after 5 services
+- Priority booking for members
+- Extended warranty on services
+- Free annual vehicle inspection
+- SMS and email service reminders
+
+SAFETY PROTOCOLS:
+- All technicians are certified and trained
+- Latest diagnostic equipment and tools
+- Quality parts from authorized suppliers
+- Environmental-friendly disposal of waste materials
+- COVID-19 safety measures in place
+
+PRICING INFORMATION:
+Pricing varies based on:
+- Vehicle make and model
+- Service complexity
+- Parts required
+- Location and demand
+- Membership status
+For exact quotes, please contact our service advisors
+
+APPOINTMENT POLICIES:
+- Cancellation allowed up to 24 hours before appointment
+- Late arrival may result in rescheduling
+- Estimate provided before work begins
+- Customer approval required for additional work
+- Payment due upon service completion
+
+FREQUENTLY ASKED QUESTIONS:
+Q: How long does a typical oil change take?
+A: Most oil changes are completed within 30-45 minutes.
+
+Q: Do you provide loaner cars?
+A: Loaner cars are available for major repairs with advance booking.
+
+Q: Can I wait while my car is being serviced?
+A: Yes, we have comfortable waiting areas with WiFi and refreshments.
+
+Q: Do you work on all car brands?
+A: Yes, we service all major automotive brands and models.
+
+Q: How do I know what service my car needs?
+A: Our technicians can perform a comprehensive inspection and recommend necessary services.
+
+SEASONAL SERVICES:
+Winter Preparation:
+- Battery testing and replacement
+- Antifreeze level check
+- Tire inspection for winter readiness
+- Heating system check
+
+Summer Preparation:
+- AC system inspection
+- Cooling system service
+- Tire pressure check
+- Fluid level inspection
+
+QUALITY ASSURANCE:
+- Multi-point inspection with every service
+- Quality control checks before vehicle delivery
+- Customer feedback system
+- Continuous technician training
+- State-of-the-art equipment maintenance
+
+ENVIRONMENTAL COMMITMENT:
+- Proper disposal of used oil and fluids
+- Recycling of automotive parts
+- Energy-efficient facility operations
+- Reduced paper usage through digital systems
