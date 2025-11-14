@@ -24,4 +24,5 @@ public class UserDTO {
     private String branchName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String status;
 }

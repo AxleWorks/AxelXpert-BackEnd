@@ -1,11 +1,11 @@
 package com.login.AxleXpert.Users.service;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
-import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +70,40 @@ public class UserService {
                 branchId,
                 branchName,
                 user.getCreatedAt(),
-                user.getUpdatedAt()
+                user.getUpdatedAt(),
+                null // status not computed here
+        );
+    }
+
+    private UserDTO toEmployeeDto(User user) {
+        Long branchId = null;
+        String branchName = null;
+        if (user.getBranch() != null) {
+            branchId = user.getBranch().getId();
+            branchName = user.getBranch().getName();
+        }
+        // Check if employee has ongoing tasks
+        long ongoingTasks = taskRepository.countByAssignedEmployeeIdAndStatusIn(
+            user.getId(), 
+            List.of(TaskStatus.NOT_STARTED, TaskStatus.IN_PROGRESS, TaskStatus.ON_HOLD)
+        );
+        String status = ongoingTasks > 0 ? "busy" : "available";
+        return new UserDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getRole(),
+                user.getEmail(),
+                user.getIs_Blocked(),
+                user.getIs_Active(),
+                user.getAddress(),
+                user.getPhoneNumber(),
+                user.getProfileImageUrl(),
+                user.getCloudinaryPublicId(),
+                branchId,
+                branchName,
+                user.getCreatedAt(),
+                user.getUpdatedAt(),
+                status
         );
     }
 
@@ -81,7 +114,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public List<UserDTO> getEmployees() {
-        return getUsersByRole("employee");
+        return userRepository.findByRoleIgnoreCaseWithBranch("employee").stream().map(this::toEmployeeDto).toList();
     }
 
     @Transactional(readOnly = true)
