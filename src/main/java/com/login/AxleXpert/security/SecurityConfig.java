@@ -1,5 +1,7 @@
 package com.login.AxleXpert.security;
 
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -12,8 +14,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -36,7 +36,7 @@ public class SecurityConfig {
 
                 // ✅ Define authorization rules
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll() // Public endpoints (login/signup)
+                        .requestMatchers("/api/auth/**", "/status","api/health").permitAll() // Public endpoints (login/signup, checkstatus)
                         .anyRequest().authenticated() // All others require JWT
                 )
 
