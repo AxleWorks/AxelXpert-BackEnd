@@ -17,15 +17,18 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
 @Table(name = "branches")
-@Data
+@Getter
+@Setter
+@ToString(exclude = {"bookings", "manager"})
 @NoArgsConstructor
 @AllArgsConstructor
 public class Branch {
@@ -65,8 +68,16 @@ public class Branch {
         updatedAt = createdAt;
     }
 
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Branch branch = (Branch) obj;
+        return id != null && id.equals(branch.id);
     }
 }

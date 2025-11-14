@@ -58,6 +58,9 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     long countCompletedThisMonthByCustomer(@Param("customerId") Long customerId, 
                                           @Param("now") LocalDateTime now);
 
+    @Query("SELECT t FROM Task t WHERE t.assignedEmployee.id = :employeeId")
+    List<Task> findByAssignedEmployeeId(@Param("employeeId") Long employeeId);
+
     @Query("SELECT t FROM Task t WHERE t.assignedEmployee.id = :employeeId ORDER BY t.createdAt DESC")
     List<Task> findByAssignedEmployeeIdOrderByCreatedAtDesc(@Param("employeeId") Long employeeId);
 

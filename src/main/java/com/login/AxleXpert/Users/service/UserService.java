@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.login.AxleXpert.Branches.entity.Branch;
 import com.login.AxleXpert.Branches.repository.BranchRepository;
+import com.login.AxleXpert.Tasks.entity.Task;
 import com.login.AxleXpert.Tasks.repository.TaskRepository;
 import com.login.AxleXpert.Users.dto.AddEmployeeDTO;
 import com.login.AxleXpert.Users.dto.ChangePasswordDTO;
@@ -19,8 +22,10 @@ import com.login.AxleXpert.Users.dto.ProfileImageUpdateDTO;
 import com.login.AxleXpert.Users.dto.UserDTO;
 import com.login.AxleXpert.Users.entity.User;
 import com.login.AxleXpert.Users.repository.UserRepository;
+import com.login.AxleXpert.bookings.entity.Booking;
 import com.login.AxleXpert.bookings.repository.BookingRepository;
 import com.login.AxleXpert.common.EmailService;
+import com.login.AxleXpert.common.enums.TaskStatus;
 
 @Service
 public class UserService {
@@ -208,14 +213,29 @@ public class UserService {
         User user = userRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
         
-        boolean hasBookingsAsCustomer = bookingRepository.existsByCustomerId(id);
-        boolean hasBookingsAsEmployee = bookingRepository.existsByAssignedEmployeeId(id);
-        boolean hasTasks = taskRepository.existsByAssignedEmployeeId(id);
+        // Check for ongoing tasks (not completed) for the user's bookings
+        long ongoingAsCustomer = taskRepository.countByCustomerIdAndStatusIn(id, List.of(TaskStatus.NOT_STARTED, TaskStatus.IN_PROGRESS, TaskStatus.ON_HOLD));
+        long ongoingAsEmployee = taskRepository.countByAssignedEmployeeIdAndStatusIn(id, List.of(TaskStatus.NOT_STARTED, TaskStatus.IN_PROGRESS, TaskStatus.ON_HOLD));
         
-        if (hasBookingsAsCustomer || hasBookingsAsEmployee || hasTasks) {
+        if (ongoingAsCustomer + ongoingAsEmployee > 0) {
             return false;
         }
         
+        // Delete all tasks where user is assigned employee or customer of the booking
+        Set<Task> tasksToDelete = new LinkedHashSet<>();
+        tasksToDelete.addAll(taskRepository.findByAssignedEmployeeIdWithBooking(id));
+        tasksToDelete.addAll(taskRepository.findByCustomerId(id));
+        for (Task task : tasksToDelete) {
+            taskRepository.delete(task);
+        }
+        
+        // Delete all bookings where user is customer
+        List<Booking> bookingsToDelete = bookingRepository.findByCustomerId(id);
+        for (Booking booking : bookingsToDelete) {
+            bookingRepository.delete(booking);
+        }
+        
+        // Finally, delete the user
         userRepository.delete(user);
         return true;
     }
