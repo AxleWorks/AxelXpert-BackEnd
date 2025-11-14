@@ -32,28 +32,28 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // ✅ Enable CORS before security checks
+                //  Enable CORS before security checks
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-                // ✅ Disable CSRF for REST APIs
+                //  Disable CSRF for REST APIs
                 .csrf(csrf -> csrf.disable())
 
-                // ✅ Define authorization rules
+                //  Define authorization rules
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/status","api/health", "/api/chat/**").permitAll() // Public endpoints (login/signup, checkstatus, chat)
                         .anyRequest().authenticated() // All others require JWT
                 )
 
-                // ✅ Stateless session (no cookies)
+                //  Stateless session (no cookies)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        // ✅ Add custom JWT filter after enabling CORS
+        //  Add custom JWT filter after enabling CORS
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // ✅ Define the CORS configuration here
+    //  Define the CORS configuration here
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
@@ -70,13 +70,13 @@ public class SecurityConfig {
         return source;
     }
 
-    // ✅ For AuthenticationManager injection
+    //  For AuthenticationManager injection
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
     }
 
-    // ✅ PasswordEncoder bean for encrypting passwords
+    //  PasswordEncoder bean for encrypting passwords
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

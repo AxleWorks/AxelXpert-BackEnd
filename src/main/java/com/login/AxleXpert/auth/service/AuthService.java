@@ -30,7 +30,7 @@ public class AuthService {
     private JavaMailSender mailSender;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;  // ✅ CRITICAL: Must be autowired
+    private PasswordEncoder passwordEncoder;  //  CRITICAL: Must be autowired
 
     @Value("${app.activation.base-url:http://localhost:8080}")
     private String activationBaseUrl;
