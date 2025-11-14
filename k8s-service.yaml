@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: axlexpert-service
+spec:
+  type: NodePort
+  selector:
+    app: axlexpert
+  ports:
+    - protocol: TCP
+      port: 80         # service port
+      targetPort: 8080 # container port
+      nodePort: 30080  # node port on localhost (30000-32767)

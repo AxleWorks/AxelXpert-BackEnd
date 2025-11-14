@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: axlexpert-deployment
+  labels:
+    app: axlexpert
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: axlexpert
+  template:
+    metadata:
+      labels:
+        app: axlexpert
+    spec:
+      containers:
+      - name: axlexpert
+        image: minulck/axelxpert:backend
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:mysql://axelxpert-axlexpert.l.aivencloud.com:25860/axelxpertdb?useSSL=true&requireSSL=true&verifyServerCertificate=false"
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: axlexpert-secrets
+              key: jwt-secret
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: axlexpert-secrets
+              key: db-password
+        - name: MAIL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: axlexpert-secrets
+              key: mail-password
+        - name: GEMINI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: axlexpert-secrets
+              key: gemini-api-key
